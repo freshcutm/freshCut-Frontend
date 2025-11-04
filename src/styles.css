@@ -1,0 +1,89 @@
+/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+/* stylelint-disable at-rule-no-unknown */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
+
+/* Base moderna y fresca */
+html, body, input, select, textarea, button {
+  font-family: 'Sora', system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif;
+}
+
+/* Tema barbería: utilidades simples para títulos y acentos */
+.barber-title {
+  font-family: 'Space Grotesk', 'Sora', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.barber-subtitle {
+  font-family: 'Sora', sans-serif;
+  font-weight: 500;
+}
+.barber-accent {
+  color: #818cf8; /* indigo-400 */
+}
+
+/* Variables de marca */
+:root {
+  --brand-amber: #4f46e5; /* indigo-600 */
+  --brand-amber-hover: #4338ca; /* indigo-700 */
+  --brand-dark: #0a0a0a; /* near black */
+  --border-neutral: #e5e7eb; /* gray-200 */
+}
+
+/* Botones globales */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+  text-decoration: none;
+}
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background-color: var(--brand-amber);
+  color: #111827; /* gray-900 */
+}
+.btn-primary:hover {
+  background-color: var(--brand-amber-hover);
+}
+.btn-outline {
+  border: 1px solid var(--brand-amber);
+  color: var(--brand-amber);
+  background-color: transparent;
+}
+.btn-outline:hover {
+  background-color: rgba(79, 70, 229, 0.12); /* indigo */
+}
+.btn-muted {
+  border: 1px solid #d1d5db; /* gray-300 */
+  color: #111827; /* gray-900 */
+  background-color: #f9fafb; /* gray-50 */
+}
+.btn-muted:hover {
+  background-color: #f3f4f6; /* gray-100 */
+}
+
+/* Logo minimalista */
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  display: inline-block;
+}
+
+/* Estilos globales opcionales */
+:root {
+  color-scheme: light;
+}

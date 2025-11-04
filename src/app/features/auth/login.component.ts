@@ -1,0 +1,49 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth.service';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  template: `
+    <div class="max-w-md mx-auto p-8 bg-white shadow-sm border rounded-lg">
+      <h2 class="text-2xl font-semibold mb-6">Iniciar sesión</h2>
+      <form (ngSubmit)="login()" class="space-y-5">
+        <div>
+          <label class="block text-sm font-medium mb-1">Email</label>
+          <input [(ngModel)]="email" name="email" type="email" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Contraseña</label>
+          <input [(ngModel)]="password" name="password" type="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700" type="submit">Entrar</button>
+          <a routerLink="/auth/register" class="text-indigo-600 hover:underline">Crear cuenta</a>
+          <a routerLink="/auth/reset" class="text-gray-600 hover:underline">¿Olvidaste tu contraseña?</a>
+        </div>
+      </form>
+    </div>
+  `
+})
+export class LoginComponent {
+  email = '';
+  password = '';
+
+  constructor(private auth: AuthService, private router: Router) {}
+
+  async login() {
+    try {
+      const res = await this.auth.login(this.email, this.password);
+      if (res.role === 'BARBER') this.router.navigateByUrl('/barbero');
+      else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin');
+      else if (res.role === 'USER') this.router.navigateByUrl('/cliente');
+      else this.router.navigateByUrl('/reservas');
+    } catch (e: any) {
+      alert('No se pudo iniciar sesión');
+    }
+  }
+}

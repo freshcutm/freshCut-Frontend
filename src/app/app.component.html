@@ -1,0 +1,55 @@
+<header class="sticky top-0 z-40 backdrop-blur bg-gray-900/70 text-white shadow">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+    <a routerLink="/home" class="flex items-center gap-2">
+      <svg class="logo-mark" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FreshCut logo">
+        <title>FreshCut</title>
+        <defs>
+          <linearGradient id="fcGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#4f46e5"/>
+            <stop offset="100%" stop-color="#a5b4fc"/>
+          </linearGradient>
+        </defs>
+        <!-- Emblema redondeado -->
+        <rect x="6" y="6" width="36" height="36" rx="12" fill="#0f172a" stroke="url(#fcGrad)" stroke-width="2.5"/>
+        <!-- Tijeras estilizadas -->
+        <g fill="none" stroke="url(#fcGrad)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- mangos simétricos -->
+          <circle cx="19" cy="21" r="3.2"/>
+          <circle cx="29" cy="27" r="3.2"/>
+          <!-- unión al pivote -->
+          <path d="M21.5 23.5 L26.5 24.5"/>
+          <!-- hojas cruzadas -->
+          <path d="M16 31 L34 17"/>
+          <path d="M18 14 L34 30"/>
+        </g>
+        <!-- pivote -->
+        <circle cx="28" cy="24" r="1.6" fill="url(#fcGrad)"/>
+      </svg>
+      <span class="barber-title text-xl font-bold tracking-tight">FreshCut</span>
+    </a>
+    <nav class="hidden sm:flex items-center gap-2">
+      <a routerLink="/reservas" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Reservas</a>
+      <a routerLink="/reservas/nueva" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Nueva</a>
+      <a routerLink="/ia" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Asistente IA</a>
+    </nav>
+    <span class="ml-auto"></span>
+    <ng-container *ngIf="!auth.isLoggedIn(); else logged">
+      <a routerLink="/auth/login" class="btn btn-primary">Entrar</a>
+      <a routerLink="/auth/register" class="btn btn-outline">Crear cuenta</a>
+    </ng-container>
+    <ng-template #logged>
+      <span class="hidden sm:inline text-sm text-indigo-200">{{ auth.email() }}</span>
+      <button (click)="logout()" class="btn btn-outline">Salir</button>
+    </ng-template>
+    <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Admin</a>
+    <a *ngIf="auth.role() === 'BARBER'" routerLink="/barbero" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Barbero</a>
+    <a *ngIf="auth.role() === 'USER'" routerLink="/cliente" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Panel</a>
+    <a *ngIf="auth.isLoggedIn()" routerLink="/perfil" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Perfil</a>
+  </div>
+</header>
+
+<main class="min-h-[calc(100vh-64px)] bg-gradient-to-b from-gray-900 via-gray-50 to-white">
+  <div class="max-w-7xl mx-auto p-4">
+    <router-outlet></router-outlet>
+  </div>
+</main>
