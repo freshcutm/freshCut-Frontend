@@ -16,7 +16,8 @@ export interface ChatResponse { reply: string; }
 
 @Injectable({ providedIn: 'root' })
 export class AiService {
-  private baseUrl = 'http://localhost:8080/api/ai';
+  // Temporal: apunta al backend actualizado corriendo en 8081
+  private baseUrl = 'http://localhost:8081/api/ai';
   constructor(private http: HttpClient) {}
 
   chat(req: ChatRequest): Observable<ChatResponse> {
