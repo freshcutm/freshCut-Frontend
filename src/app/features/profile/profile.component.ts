@@ -45,6 +45,25 @@ export class ProfileComponent implements OnInit {
   profile?: Profile;
   name: string = '';
   avatarSrc = '';
+  // SVG inline como data URL para eliminar dependencia de assets y evitar 404
+  private defaultAvatar =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" role="img" aria-label="Avatar placeholder">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f0f4f8"/>
+            <stop offset="100%" stop-color="#e2e8f0"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="80" height="80" rx="12" fill="url(#bg)"/>
+        <circle cx="40" cy="32" r="14" fill="#94a3b8"/>
+        <path d="M12 72c0-12 12-22 28-22s28 10 28 22" fill="#cbd5e1"/>
+        <circle cx="40" cy="32" r="10" fill="#e2e8f0"/>
+        <circle cx="40" cy="32" r="6" fill="#94a3b8"/>
+        <title>Avatar placeholder</title>
+      </svg>`
+    );
   avatarPreview: string | null = null;
   selectedFile: File | null = null;
   loading = false;
@@ -55,12 +74,12 @@ export class ProfileComponent implements OnInit {
     this.profileService.me().subscribe(p => {
       this.profile = p;
       this.name = p.name || '';
-      this.avatarSrc = p.avatarUrl || '';
+      this.avatarSrc = p.avatarUrl || this.defaultAvatar;
     });
   }
 
   onAvatarError() {
-    this.avatarSrc = 'https://via.placeholder.com/80x80?text=👤';
+    this.avatarSrc = this.defaultAvatar;
   }
 
   onFileSelected(event: Event) {
