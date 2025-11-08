@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <defs>
+    <style>
+      .bg { fill: #e5e7eb; }
+      .circle { fill: #cbd5e1; }
+      .stroke { stroke: #9ca3af; stroke-width: 2; fill: none; }
+    </style>
+  </defs>
+  <rect class="bg" x="0" y="0" width="80" height="80" rx="12" ry="12"/>
+  <circle class="circle" cx="40" cy="28" r="12" />
+  <circle class="stroke" cx="40" cy="28" r="12" />
+  <path d="M20 64c0-12 12-20 20-20s20 8 20 20" fill="#cbd5e1"/>
+  <path d="M20 64c0-12 12-20 20-20s20 8 20 20" class="stroke" />
+</svg>
