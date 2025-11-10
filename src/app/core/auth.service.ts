@@ -19,15 +19,14 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   async login(email: string, password: string) {
-    const hashed = await this.sha256(password);
-    const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/login`, { email, password: hashed }));
+    const payload = { email: (email || '').trim(), password };
+    const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/login`, payload));
     this.setSession(res);
     return res;
   }
 
   async register(name: string, email: string, password: string, role?: 'USER' | 'ADMIN' | 'BARBER', barberId?: string) {
-    const hashed = await this.sha256(password);
-    const payload: any = { name, email, password: hashed };
+    const payload: any = { name: (name || '').trim(), email: (email || '').trim(), password };
     if (role) payload.role = role;
     if (role === 'BARBER' && barberId) payload.barberId = barberId;
     const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/register`, payload));
@@ -65,9 +64,7 @@ export class AuthService {
   }
 
   async resetPassword(email: string, code: string, newPassword: string) {
-    // Mantener hashing cliente como en login/register
-    const hashed = await this.sha256(newPassword);
-    await firstValueFrom(this.http.post(`${this.baseUrl}/reset`, { email, code, newPassword: hashed }));
+    await firstValueFrom(this.http.post(`${this.baseUrl}/reset`, { email: (email || '').trim(), code: (code || '').trim(), newPassword }));
     return true;
   }
 
@@ -84,10 +81,5 @@ export class AuthService {
 
   getToken() { return this._token(); }
 
-  private async sha256(text: string): Promise<string> {
-    const enc = new TextEncoder().encode(text);
-    const buf = await crypto.subtle.digest('SHA-256', enc);
-    const bytes = Array.from(new Uint8Array(buf));
-    return bytes.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
+  // Contraseñas se envían en texto plano al backend, que las cifra (BCrypt).
 }
