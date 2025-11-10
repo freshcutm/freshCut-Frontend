@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
   selector: 'app-login',
@@ -33,17 +34,23 @@ export class LoginComponent {
   email = '';
   password = '';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
 
   async login() {
     try {
-      const res = await this.auth.login(this.email, this.password);
+      const email = (this.email || '').trim();
+      const password = this.password || '';
+      if (!email || !password) {
+        this.notifications.error('Introduce un email y contraseña válidos');
+        return;
+      }
+      const res = await this.auth.login(email, password);
       if (res.role === 'BARBER') this.router.navigateByUrl('/barbero');
       else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin');
       else if (res.role === 'USER') this.router.navigateByUrl('/cliente');
       else this.router.navigateByUrl('/reservas');
     } catch (e: any) {
-      alert('No se pudo iniciar sesión');
+      this.notifications.error(e?.error?.message || 'No se pudo iniciar sesión');
     }
   }
 }
