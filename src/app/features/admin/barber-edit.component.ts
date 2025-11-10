@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { Barber } from '../../core/catalog.service';
+import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
   selector: 'app-barber-edit',
@@ -62,7 +63,7 @@ export class BarberEditComponent implements OnInit {
   bioText = '';
   active = true;
 
-  constructor(private route: ActivatedRoute, private router: Router, private admin: AdminService) {}
+  constructor(private route: ActivatedRoute, private router: Router, private admin: AdminService, private notifications: NotificationsService) {}
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') || '';
@@ -70,7 +71,7 @@ export class BarberEditComponent implements OnInit {
       next: (bs) => {
         const b = bs.find(x => x.id === this.id);
         if (!b) {
-          alert('Barbero no encontrado');
+          this.notifications.error('Barbero no encontrado');
           this.router.navigateByUrl('/admin/barberos');
           return;
         }
@@ -83,7 +84,7 @@ export class BarberEditComponent implements OnInit {
         this.loaded = true;
       },
       error: () => {
-        alert('No se pudo cargar el barbero');
+        this.notifications.error('No se pudo cargar el barbero');
         this.router.navigateByUrl('/admin/barberos');
       }
     });
@@ -100,10 +101,10 @@ export class BarberEditComponent implements OnInit {
       .filter(s => !!s);
     this.admin.updateBarber(this.id, { name: this.name, specialties, cutTypes, experienceYears: this.experienceYears ?? undefined, bio: this.bioText || undefined, active: this.active }).subscribe({
       next: () => {
-        alert('Barbero actualizado');
+        this.notifications.success('Barbero actualizado');
         this.router.navigateByUrl('/admin/barberos');
       },
-      error: (err) => alert(err?.error?.error || 'No se pudo actualizar')
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo actualizar')
     });
   }
 

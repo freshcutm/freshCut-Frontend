@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { Barber } from '../../core/catalog.service';
+import { NotificationsService } from '../../ui/notifications.service';
+import { ConfirmService } from '../../ui/confirm.service';
 
 @Component({
   selector: 'app-barber-list',
@@ -43,7 +45,7 @@ import { Barber } from '../../core/catalog.service';
 export class BarberListComponent implements OnInit {
   barbers: Barber[] = [];
 
-  constructor(private admin: AdminService) {}
+  constructor(private admin: AdminService, private notifications: NotificationsService, private confirm: ConfirmService) {}
 
   ngOnInit(): void {
     this.load();
@@ -53,15 +55,16 @@ export class BarberListComponent implements OnInit {
     this.admin.listBarbers().subscribe({ next: (bs) => this.barbers = bs });
   }
 
-  remove(b: Barber) {
+  async remove(b: Barber) {
     if (!b.id) return;
-    const ok = confirm(`¿Eliminar barbero "${b.name}"?`);
+    const ok = await this.confirm.confirm({ message: `¿Eliminar barbero "${b.name}"?`, confirmText: 'Sí, eliminar', cancelText: 'No' });
     if (!ok) return;
     this.admin.deleteBarber(b.id).subscribe({
       next: () => {
         this.barbers = this.barbers.filter(x => x.id !== b.id);
+        this.notifications.success('Barbero eliminado');
       },
-      error: (err) => alert(err?.error?.error || 'No se pudo eliminar')
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo eliminar')
     });
   }
 }

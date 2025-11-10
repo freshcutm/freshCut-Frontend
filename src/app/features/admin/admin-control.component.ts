@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { Barber, ServiceItem } from '../../core/catalog.service';
 import { CurrencyService } from '../../core/currency.service';
+import { ConfirmService } from '../../ui/confirm.service';
 
 @Component({
   selector: 'app-admin-control',
@@ -149,7 +150,7 @@ import { CurrencyService } from '../../core/currency.service';
    `
  
  })
- export class AdminControlComponent implements OnInit {
+export class AdminControlComponent implements OnInit {
   // Barbers
   barbers: Barber[] = [];
   newBarberName = '';
@@ -168,7 +169,7 @@ import { CurrencyService } from '../../core/currency.service';
   newServiceActive = true;
   serviceError = '';
 
-  constructor(private adminService: AdminService, private currency: CurrencyService) {}
+  constructor(private adminService: AdminService, private currency: CurrencyService, private confirm: ConfirmService) {}
 
   ngOnInit(): void {
     this.currency.warmup();
@@ -220,9 +221,9 @@ import { CurrencyService } from '../../core/currency.service';
     });
   }
 
-  removeBarber(b: Barber): void {
+  async removeBarber(b: Barber): Promise<void> {
      if (!b?.id) return;
-     const ok = confirm('¿Seguro que deseas retirar a "' + b.name + '"?');
+     const ok = await this.confirm.confirm({ message: `¿Seguro que deseas retirar a "${b.name}"?`, confirmText: 'Sí, retirar', cancelText: 'No' });
      if (!ok) return;
      this.adminService.deleteBarber(b.id).subscribe({
        next: () => this.loadBarbers(),
@@ -272,9 +273,10 @@ import { CurrencyService } from '../../core/currency.service';
     });
   }
 
-  removeService(s: ServiceItem): void {
+  async removeService(s: ServiceItem): Promise<void> {
     if (!s?.id) return;
-    const ok = confirm('¿Eliminar servicio "' + s.name + '"?');
+    const ok = await this.confirm.confirm({ message: `¿Eliminar servicio "${s.name}"?`, confirmText: 'Sí, eliminar', cancelText: 'No' });
+
     if (!ok) return;
     this.adminService.deleteService(s.id).subscribe({
       next: () => this.loadServices(),

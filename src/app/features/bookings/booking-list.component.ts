@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { BookingService, Booking } from '../../core/booking.service';
 import { AuthService } from '../../core/auth.service';
+import { NotificationsService } from '../../ui/notifications.service';
+import { ConfirmService } from '../../ui/confirm.service';
 
 @Component({
   selector: 'app-booking-list',
@@ -39,7 +41,7 @@ import { AuthService } from '../../core/auth.service';
 export class BookingListComponent implements OnInit {
   bookings: Booking[] = [];
 
-  constructor(private bookingService: BookingService, public auth: AuthService) {}
+  constructor(private bookingService: BookingService, public auth: AuthService, private notifications: NotificationsService, private confirm: ConfirmService) {}
 
   ngOnInit(): void { this.load(); }
 
@@ -49,7 +51,7 @@ export class BookingListComponent implements OnInit {
         next: (data) => this.bookings = data,
         error: (err) => {
           if (err?.status === 401) { this.auth.logout(); return; }
-          alert(err?.error?.error || 'No se pudo cargar las reservas');
+          this.notifications.error(err?.error?.error || 'No se pudo cargar las reservas');
         }
       });
     } else {
@@ -57,27 +59,29 @@ export class BookingListComponent implements OnInit {
         next: (data) => this.bookings = data,
         error: (err) => {
           if (err?.status === 401) { this.auth.logout(); return; }
-          alert(err?.error?.error || 'No se pudo cargar tus reservas');
+          this.notifications.error(err?.error?.error || 'No se pudo cargar tus reservas');
         }
       });
     }
   }
 
-  cancel(b: Booking) {
+  async cancel(b: Booking) {
     if (!b.id) return;
-    if (!confirm('¿Cancelar esta reserva?')) return;
+    const ok = await this.confirm.confirm({ message: '¿Cancelar esta reserva?', confirmText: 'Sí, cancelar', cancelText: 'No' });
+    if (!ok) return;
     this.bookingService.cancel(b.id).subscribe({
-      next: (res) => { b.status = res.status || 'CANCELLED'; },
-      error: (err) => alert(err?.error?.error || 'No se pudo cancelar')
+      next: (res) => { b.status = res.status || 'CANCELLED'; this.notifications.success('Reserva cancelada'); },
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo cancelar')
     });
   }
 
-  remove(b: Booking) {
+  async remove(b: Booking) {
     if (!b.id) return;
-    if (!confirm('¿Eliminar esta reserva?')) return;
+    const ok = await this.confirm.confirm({ message: '¿Eliminar esta reserva?', confirmText: 'Sí, eliminar', cancelText: 'No' });
+    if (!ok) return;
     this.bookingService.delete(b.id).subscribe({
-      next: () => this.bookings = this.bookings.filter(x => x.id !== b.id),
-      error: (err) => alert(err?.error?.error || 'No se pudo eliminar')
+      next: () => { this.bookings = this.bookings.filter(x => x.id !== b.id); this.notifications.success('Reserva eliminada'); },
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo eliminar')
     });
   }
 }

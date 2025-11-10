@@ -8,6 +8,7 @@ import { CatalogService, Barber, ServiceItem } from '../../core/catalog.service'
 import { serviceIconPath, serviceIconColor, serviceIconStrokeWidth } from '../../core/service-icons';
 import { CurrencyService } from '../../core/currency.service';
 import { realDurationMinutes } from '../../core/duration-realism';
+import { NotificationsService } from '../../ui/notifications.service';
 // Chat de IA movido a página independiente
 
 @Component({
@@ -101,7 +102,8 @@ export class BookingFormComponent implements OnInit {
     private auth: AuthService,
     private catalog: CatalogService,
     private router: Router,
-    private currency: CurrencyService
+    private currency: CurrencyService,
+    private notifications: NotificationsService
   ) {}
 
   ngOnInit(): void {
@@ -110,14 +112,14 @@ export class BookingFormComponent implements OnInit {
       next: (data) => this.barbers = data,
       error: (err) => {
         if (err?.status === 401) { this.auth.logout(); return; }
-        alert(err?.error?.error || 'No se pudo cargar barberos');
+        this.notifications.error(err?.error?.error || 'No se pudo cargar barberos');
       }
     });
     this.catalog.listServices().subscribe({
       next: (data) => this.services = data,
       error: (err) => {
         if (err?.status === 401) { this.auth.logout(); return; }
-        alert(err?.error?.error || 'No se pudo cargar servicios');
+        this.notifications.error(err?.error?.error || 'No se pudo cargar servicios');
       }
     });
   }
@@ -135,13 +137,13 @@ export class BookingFormComponent implements OnInit {
     const serviceName = this.service ? this.service.name : '';
     this.bookingService.create({ clientName: client, barber: barberName, service: serviceName, startTime: start, endTime: end }).subscribe({
       next: () => {
-        alert('Reserva creada');
+        this.notifications.success('Reserva creada');
         this.router.navigateByUrl('/reservas');
       },
       error: (err) => {
         if (err?.status === 401) { this.auth.logout(); return; }
         const msg = err?.error?.error || 'No se pudo crear la reserva';
-        alert(msg);
+        this.notifications.error(msg);
       }
     });
   }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
+import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
   selector: 'app-barber-form',
@@ -51,7 +52,7 @@ export class BarberFormComponent {
   bio = '';
   active = true;
 
-  constructor(private admin: AdminService, private router: Router) {}
+  constructor(private admin: AdminService, private router: Router, private notifications: NotificationsService) {}
 
   create() {
     const payload = {
@@ -68,10 +69,10 @@ export class BarberFormComponent {
     };
     this.admin.createBarber(payload).subscribe({
       next: () => {
-        alert('Barbero creado');
+        this.notifications.success('Barbero creado');
         this.router.navigateByUrl('/admin');
       },
-      error: () => alert('No se pudo crear el barbero')
+      error: () => this.notifications.error('No se pudo crear el barbero')
     });
   }
 }

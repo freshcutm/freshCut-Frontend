@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Profile, ProfileService } from '../../core/profile.service';
+import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
   selector: 'app-profile',
@@ -12,7 +13,7 @@ import { Profile, ProfileService } from '../../core/profile.service';
       <h2 class="text-2xl font-semibold mb-4">Mi perfil</h2>
 
       <div class="flex flex-wrap items-center gap-4 mb-6">
-        <img [src]="avatarSrc" (error)="onAvatarError()" alt="avatar" class="w-20 h-20 rounded-full object-cover border" />
+        <img [src]="avatarPreview || avatarSrc" (load)="onAvatarLoad()" (error)="onAvatarError()" alt="avatar" class="w-20 h-20 rounded-full object-cover border" />
         <div>
           <div class="text-sm text-gray-600">{{ profile?.email }}</div>
           <div class="text-xs text-gray-500">Rol: {{ profile?.role }}</div>
@@ -68,18 +69,27 @@ export class ProfileComponent implements OnInit {
   selectedFile: File | null = null;
   loading = false;
 
-  constructor(private profileService: ProfileService) {}
+  constructor(private profileService: ProfileService, private notifications: NotificationsService) {}
 
   ngOnInit() {
     this.profileService.me().subscribe(p => {
       this.profile = p;
       this.name = p.name || '';
-      this.avatarSrc = p.avatarUrl || this.defaultAvatar;
+      this.avatarSrc = this.resolveAvatarUrl(p.avatarUrl);
     });
   }
 
   onAvatarError() {
-    this.avatarSrc = this.defaultAvatar;
+    // Si hay previsualización activa, no sobrescribimos el avatar
+    if (!this.avatarPreview) {
+      this.avatarSrc = this.defaultAvatar;
+    }
+  }
+
+  onAvatarLoad() {
+    if (this.avatarPreview) {
+      this.avatarPreview = null;
+    }
   }
 
   onFileSelected(event: Event) {
@@ -87,7 +97,11 @@ export class ProfileComponent implements OnInit {
     if (input.files && input.files.length > 0) {
       this.selectedFile = input.files[0];
       const reader = new FileReader();
-      reader.onload = () => { this.avatarPreview = reader.result as string; };
+      reader.onload = () => {
+        this.avatarPreview = reader.result as string;
+        // Refuerza que el avatar grande muestre la nueva imagen inmediatamente
+        this.avatarSrc = this.avatarPreview;
+      };
       reader.readAsDataURL(this.selectedFile);
     }
   }
@@ -105,15 +119,23 @@ export class ProfileComponent implements OnInit {
     Promise.all(actions).then(() => {
       this.profileService.me().subscribe(p => {
         this.profile = p;
-        this.avatarSrc = p.avatarUrl || '';
-        this.avatarPreview = null;
+        this.avatarSrc = this.resolveAvatarUrl(p.avatarUrl);
+        // Mantener la previsualización hasta que la imagen remota cargue correctamente
         this.selectedFile = null;
         this.loading = false;
-        alert('Perfil actualizado');
+        this.notifications.success('Perfil actualizado');
       });
     }).catch(() => {
       this.loading = false;
-      alert('No se pudo actualizar el perfil');
+      this.notifications.error('No se pudo actualizar el perfil');
     });
+  }
+
+  private resolveAvatarUrl(url?: string | null): string {
+    if (!url || !url.trim()) return this.defaultAvatar;
+    const u = url.trim();
+    // Si el backend devuelve ruta relativa ("/api/profile/avatar/{id}"), prefijar host
+    if (u.startsWith('/')) return `http://localhost:8080${u}`;
+    return u;
   }
 }

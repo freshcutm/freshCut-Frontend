@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BarberService, Booking, Schedule } from '../../core/barber.service';
+import { NotificationsService } from '../../ui/notifications.service';
+import { ConfirmService } from '../../ui/confirm.service';
 import { Barber } from '../../core/catalog.service';
 
 @Component({
@@ -167,7 +169,7 @@ export class BarberDashboardComponent implements OnInit {
   newStart: string = '09:00';
   newEnd: string = '17:00';
 
-  constructor(private barber: BarberService) {}
+  constructor(private barber: BarberService, private notifications: NotificationsService, private confirm: ConfirmService) {}
 
   ngOnInit(): void {
     this.barber.me().subscribe({
@@ -181,8 +183,8 @@ export class BarberDashboardComponent implements OnInit {
   saveActive() {
     if (!this.me) return;
     this.barber.updateMe({ active: this.meActiveDraft }).subscribe({
-      next: (updated) => { this.me = updated; },
-      error: () => alert('No se pudo actualizar el estado')
+      next: (updated) => { this.me = updated; this.notifications.success('Estado actualizado'); },
+      error: () => this.notifications.error('No se pudo actualizar el estado')
     });
   }
 
@@ -197,8 +199,8 @@ export class BarberDashboardComponent implements OnInit {
       .map(s => s.trim())
       .filter(s => !!s);
     this.barber.updateMe({ name: this.meNameDraft, specialties, cutTypes, experienceYears: this.meExperienceDraft, bio: this.meBioDraft }).subscribe({
-      next: (updated) => { this.me = updated; alert('Perfil actualizado'); },
-      error: (err) => alert(err?.error?.error || 'No se pudo actualizar el perfil')
+      next: (updated) => { this.me = updated; this.notifications.success('Perfil actualizado'); },
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo actualizar el perfil')
     });
   }
 
@@ -231,12 +233,13 @@ export class BarberDashboardComponent implements OnInit {
   }
 
   // NUEVO: cancelar reserva
-  cancelBooking(b: Booking) {
+  async cancelBooking(b: Booking) {
     if (!b.id) return;
-    if (!confirm('¿Cancelar esta reserva?')) return;
+    const ok = await this.confirm.confirm({ message: '¿Cancelar esta reserva?', confirmText: 'Sí, cancelar', cancelText: 'No' });
+    if (!ok) return;
     this.barber.cancelBooking(b.id).subscribe({
-      next: () => { this.refreshBookings(); alert('Reserva cancelada'); },
-      error: (err) => alert(err?.error?.error || 'No se pudo cancelar la reserva')
+      next: () => { this.refreshBookings(); this.notifications.success('Reserva cancelada'); },
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo cancelar la reserva')
     });
   }
 
@@ -245,9 +248,9 @@ export class BarberDashboardComponent implements OnInit {
     this.barber.createSchedule({ dayOfWeek: this.newDay, startTime: this.newStart, endTime: this.newEnd }).subscribe({
       next: (created) => {
         this.schedules = [...(this.schedules || []), created];
-        alert('Horario creado');
+        this.notifications.success('Horario creado');
       },
-      error: (err) => alert(err?.error?.error || 'No se pudo crear el horario')
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo crear el horario')
     });
   }
 
@@ -256,21 +259,22 @@ export class BarberDashboardComponent implements OnInit {
     this.barber.updateSchedule(s.id, { dayOfWeek: s.dayOfWeek, startTime: s.startTime, endTime: s.endTime }).subscribe({
       next: (updated) => {
         this.schedules = (this.schedules || []).map(x => x.id === updated.id ? updated : x);
-        alert('Horario actualizado');
+        this.notifications.success('Horario actualizado');
       },
-      error: (err) => alert(err?.error?.error || 'No se pudo actualizar el horario')
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo actualizar el horario')
     });
   }
 
-  deleteSchedule(s: Schedule) {
+  async deleteSchedule(s: Schedule) {
     if (!s.id) return;
-    if (!confirm('¿Eliminar este horario?')) return;
+    const ok = await this.confirm.confirm({ message: '¿Eliminar este horario?', confirmText: 'Sí, eliminar', cancelText: 'No' });
+    if (!ok) return;
     this.barber.deleteSchedule(s.id).subscribe({
       next: () => {
         this.schedules = (this.schedules || []).filter(x => x.id !== s.id);
-        alert('Horario eliminado');
+        this.notifications.success('Horario eliminado');
       },
-      error: (err) => alert(err?.error?.error || 'No se pudo eliminar el horario')
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo eliminar el horario')
     });
   }
 
@@ -289,12 +293,13 @@ export class BarberDashboardComponent implements OnInit {
   }
 
   // NUEVO: completar reserva
-  completeBooking(b: Booking) {
+  async completeBooking(b: Booking) {
     if (!b.id) return;
-    if (!confirm('¿Marcar esta reserva como completada?')) return;
+    const ok = await this.confirm.confirm({ message: '¿Marcar esta reserva como completada?', confirmText: 'Sí, completar', cancelText: 'No' });
+    if (!ok) return;
     this.barber.completeBooking(b.id).subscribe({
-      next: () => { this.refreshBookings(); alert('Reserva marcada como completada'); },
-      error: (err) => alert(err?.error?.error || 'No se pudo completar la reserva')
+      next: () => { this.refreshBookings(); this.notifications.success('Reserva marcada como completada'); },
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo completar la reserva')
     });
   }
   // NUEVO: lista filtrada según el filtro actual

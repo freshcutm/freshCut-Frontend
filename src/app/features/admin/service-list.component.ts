@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { ServiceItem } from '../../core/catalog.service';
 import { CurrencyService } from '../../core/currency.service';
+import { ConfirmService } from '../../ui/confirm.service';
+import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
   selector: 'app-service-list',
@@ -102,7 +104,7 @@ export class ServiceListComponent implements OnInit {
   searchTerm = '';
   statusFilter: 'all' | 'active' | 'inactive' = 'all';
 
-  constructor(private admin: AdminService, private currency: CurrencyService) {}
+  constructor(private admin: AdminService, private currency: CurrencyService, private notifications: NotificationsService, private confirm: ConfirmService) {}
 
   ngOnInit(): void {
     this.currency.warmup();
@@ -121,7 +123,7 @@ export class ServiceListComponent implements OnInit {
       active: this.newActive
     } as any;
     if (!this.canCreate()) {
-      alert('Revisa los campos: nombre, duración y precio');
+      this.notifications.error('Revisa los campos: nombre, duración y precio');
       return;
     }
     this.admin.createService(payload).subscribe({
@@ -132,7 +134,7 @@ export class ServiceListComponent implements OnInit {
         this.newPrice = 1500;
         this.newActive = true;
       },
-      error: (err) => alert(err?.error?.error || 'No se pudo crear')
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo crear')
     });
   }
 
@@ -142,17 +144,17 @@ export class ServiceListComponent implements OnInit {
       next: (updated) => {
         this.services = this.services.map(x => x.id === updated.id ? updated : x);
       },
-      error: () => { alert('No se pudo cambiar estado'); }
+      error: () => { this.notifications.error('No se pudo cambiar estado'); }
     });
   }
 
-  remove(s: ServiceItem) {
+  async remove(s: ServiceItem) {
     if (!s.id) return;
-    const ok = confirm(`¿Eliminar servicio "${s.name}"?`);
+    const ok = await this.confirm.confirm({ message: `¿Eliminar servicio "${s.name}"?`, confirmText: 'Sí, eliminar', cancelText: 'No' });
     if (!ok) return;
     this.admin.deleteService(s.id).subscribe({
       next: () => { this.services = this.services.filter(x => x.id !== s.id); },
-      error: (err) => alert(err?.error?.error || 'No se pudo eliminar')
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo eliminar')
     });
   }
 

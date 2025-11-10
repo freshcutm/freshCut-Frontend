@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { ServiceItem } from '../../core/catalog.service';
+import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
   selector: 'app-service-edit',
@@ -51,14 +52,14 @@ export class ServiceEditComponent implements OnInit {
   price = 1500;
   active = true;
 
-  constructor(private route: ActivatedRoute, private router: Router, private admin: AdminService) {}
+  constructor(private route: ActivatedRoute, private router: Router, private admin: AdminService, private notifications: NotificationsService) {}
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') || '';
     this.admin.getService(this.id).subscribe({
       next: (s: ServiceItem) => {
         if (!s) {
-          alert('Servicio no encontrado');
+          this.notifications.error('Servicio no encontrado');
           this.router.navigateByUrl('/admin/servicios');
           return;
         }
@@ -69,7 +70,7 @@ export class ServiceEditComponent implements OnInit {
         this.loaded = true;
       },
       error: () => {
-        alert('No se pudo cargar el servicio');
+        this.notifications.error('No se pudo cargar el servicio');
         this.router.navigateByUrl('/admin/servicios');
       }
     });
@@ -91,10 +92,10 @@ export class ServiceEditComponent implements OnInit {
       active: this.active
     }).subscribe({
       next: () => {
-        alert('Servicio actualizado');
+        this.notifications.success('Servicio actualizado');
         this.router.navigateByUrl('/admin/servicios');
       },
-      error: (err) => alert(err?.error?.error || 'No se pudo actualizar')
+      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo actualizar')
     });
   }
 

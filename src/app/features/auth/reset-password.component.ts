@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
   selector: 'app-reset-password',
@@ -47,18 +48,19 @@ export class ResetPasswordComponent {
   confirm = '';
   done = false;
   submitting = false;
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
   async submit() {
     if (this.submitting) return;
     if (!this.email || !this.code || !this.password || !this.confirm) return;
-    if (this.password !== this.confirm) { alert('Las contraseñas no coinciden'); return; }
+    if (this.password !== this.confirm) { this.notifications.error('Las contraseñas no coinciden'); return; }
     this.submitting = true;
     try {
       await this.auth.resetPassword(this.email, this.code, this.password);
       this.done = true;
+      this.notifications.success('Contraseña actualizada');
       setTimeout(() => this.router.navigateByUrl('/auth/login'), 1200);
     } catch (e: any) {
-      alert(e?.error?.message || e?.error?.error || 'No se pudo cambiar la contraseña');
+      this.notifications.error(e?.error?.message || e?.error?.error || 'No se pudo cambiar la contraseña');
     } finally {
       this.submitting = false;
     }

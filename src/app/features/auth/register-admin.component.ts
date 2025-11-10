@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
   selector: 'app-register-admin',
@@ -42,15 +43,15 @@ export class RegisterAdminComponent {
   email = '';
   password = '';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
 
   async register() {
     try {
       await this.auth.register(this.name, this.email, this.password, 'ADMIN');
-      alert('Cuenta admin creada. Ahora inicia sesión.');
+      this.notifications.success('Cuenta admin creada. Ahora inicia sesión.');
       this.router.navigateByUrl('/auth/login');
     } catch (e: any) {
-      alert(e?.error?.message || e?.error?.error || e?.message || 'No se pudo registrar');
+      this.notifications.error(e?.error?.message || e?.error?.error || e?.message || 'No se pudo registrar');
     }
   }
 }

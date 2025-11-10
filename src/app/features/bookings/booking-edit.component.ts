@@ -6,6 +6,7 @@ import { forkJoin } from 'rxjs';
 import { BookingService, Booking } from '../../core/booking.service';
 import { CatalogService, Barber, ServiceItem } from '../../core/catalog.service';
 import { AuthService } from '../../core/auth.service';
+import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
   selector: 'app-booking-edit',
@@ -67,7 +68,8 @@ export class BookingEditComponent implements OnInit {
     private router: Router,
     private bookingService: BookingService,
     private catalog: CatalogService,
-    private auth: AuthService
+    private auth: AuthService,
+    private notifications: NotificationsService
   ) {}
 
   ngOnInit(): void {
@@ -85,7 +87,7 @@ export class BookingEditComponent implements OnInit {
       },
       error: (err) => {
         if (err?.status === 401) { this.auth.logout(); return; }
-        alert('No se pudo cargar la reserva');
+        this.notifications.error('No se pudo cargar la reserva');
         this.router.navigateByUrl('/reservas');
       }
     });
@@ -114,12 +116,12 @@ export class BookingEditComponent implements OnInit {
     };
     this.bookingService.update(this.id, payload).subscribe({
       next: () => {
-        alert('Reserva actualizada');
+        this.notifications.success('Reserva actualizada');
         this.router.navigateByUrl('/reservas');
       },
       error: (err) => {
         if (err?.status === 401) { this.auth.logout(); return; }
-        alert(err?.error?.error || 'No se pudo actualizar la reserva');
+        this.notifications.error(err?.error?.error || 'No se pudo actualizar la reserva');
       }
     });
   }
