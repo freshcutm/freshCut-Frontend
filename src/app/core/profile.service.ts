@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from './api.config';
 
 export interface Profile {
   id: string;
@@ -12,7 +13,7 @@ export interface Profile {
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
-  private baseUrl = 'http://localhost:8080/api/profile';
+  private baseUrl = `${API_BASE_URL}/profile`;
   constructor(private http: HttpClient) {}
 
   me(): Observable<Profile> {

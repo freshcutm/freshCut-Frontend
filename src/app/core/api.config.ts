@@ -1,8 +1,15 @@
 // Configuración runtime de la API: lee de window.__env y hace fallback a localhost
 const w = (typeof window !== 'undefined' ? (window as any) : {});
 
-// URL base del backend (incluye "/api")
-export const API_BASE_URL: string = w?.__env?.API_BASE_URL ?? 'http://localhost:8080/api';
+// URL base del backend (incluye "/api").
+// Estrategia: 1) usa window.__env si existe; 2) si no estamos en localhost,
+// usa el backend de Render; 3) fallback a localhost para desarrollo.
+export const API_BASE_URL: string = (() => {
+  const envUrl = w?.__env?.API_BASE_URL as string | undefined;
+  if (envUrl && typeof envUrl === 'string') return envUrl;
+  const isProdLike = typeof window !== 'undefined' && !!window.location && !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+  return isProdLike ? 'https://freshcut-back.onrender.com/api' : 'http://localhost:8080/api';
+})();
 
 // Origen del backend (sin la parte "/api") para casos donde el backend
 // devuelve rutas relativas que empiezan por "/api/..."
@@ -11,7 +18,9 @@ export const API_ORIGIN: string = (() => {
     const u = new URL(API_BASE_URL);
     return `${u.protocol}//${u.host}`;
   } catch {
-    return 'http://localhost:8080';
+    // Fallback alineado con la heurística de API_BASE_URL
+    const isProdLike = typeof window !== 'undefined' && !!window.location && !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+    return isProdLike ? 'https://freshcut-back.onrender.com' : 'http://localhost:8080';
   }
 })();
 
