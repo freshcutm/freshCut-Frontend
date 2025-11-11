@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from './api.config';
 
 export interface Barber {
   id: string;
@@ -23,7 +24,7 @@ export interface ServiceItem {
 
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
-  private baseUrl = 'http://localhost:8080/api';
+  private baseUrl = API_BASE_URL;
 
   constructor(private http: HttpClient) {}
 

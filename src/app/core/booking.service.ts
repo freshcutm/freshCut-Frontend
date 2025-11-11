@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from './api.config';
 
 export interface Booking {
   id?: string;
@@ -15,7 +16,7 @@ export interface Booking {
 
 @Injectable({ providedIn: 'root' })
 export class BookingService {
-  private baseUrl = 'http://localhost:8080/api/bookings';
+  private baseUrl = `${API_BASE_URL}/bookings`;
 
   constructor(private http: HttpClient) {}
 

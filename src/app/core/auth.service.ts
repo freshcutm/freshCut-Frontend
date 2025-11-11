@@ -2,12 +2,13 @@ import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
+import { API_BASE_URL } from './api.config';
 
 interface AuthResponse { token: string; email: string; role: 'USER' | 'ADMIN' | 'BARBER'; }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private baseUrl = 'http://localhost:8080/api/auth';
+  private baseUrl = `${API_BASE_URL}/auth`;
   private _token = signal<string | null>(typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null);
   private _email = signal<string | null>(typeof localStorage !== 'undefined' ? localStorage.getItem('auth_email') : null);
   private _role = signal<'USER' | 'ADMIN' | 'BARBER' | null>(typeof localStorage !== 'undefined' ? (localStorage.getItem('auth_role') as any) : null);

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_AI_URL } from './api.config';
 
 export interface AiMessage {
   role: 'user' | 'assistant';
@@ -16,8 +17,8 @@ export interface ChatResponse { reply: string; }
 
 @Injectable({ providedIn: 'root' })
 export class AiService {
-  // Lee la URL del backend desde window.__env con fallback al puerto real (8080)
-  private baseUrl = (window as any)?.__env?.API_AI_URL ?? 'http://localhost:8080/api/ai';
+  // URL del módulo de IA, configurable por runtime
+  private baseUrl = API_AI_URL;
   constructor(private http: HttpClient) {}
 
   chat(req: ChatRequest): Observable<ChatResponse> {

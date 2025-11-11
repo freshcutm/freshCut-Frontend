@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from './api.config';
 import { Barber } from './catalog.service';
 
 // Tipos usados por el panel del barbero
@@ -25,8 +26,8 @@ export interface Booking {
 
 @Injectable({ providedIn: 'root' })
 export class BarberService {
-  private baseUrl = 'http://localhost:8080/api/barber';
-  private bookingsUrl = 'http://localhost:8080/api/bookings';
+  private baseUrl = `${API_BASE_URL}/barber`;
+  private bookingsUrl = `${API_BASE_URL}/bookings`;
 
   constructor(private http: HttpClient) {}
 

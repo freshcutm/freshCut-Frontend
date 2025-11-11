@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Profile, ProfileService } from '../../core/profile.service';
+import { API_ORIGIN } from '../../core/api.config';
 import { NotificationsService } from '../../ui/notifications.service';
 
 @Component({
@@ -134,8 +135,8 @@ export class ProfileComponent implements OnInit {
   private resolveAvatarUrl(url?: string | null): string {
     if (!url || !url.trim()) return this.defaultAvatar;
     const u = url.trim();
-    // Si el backend devuelve ruta relativa ("/api/profile/avatar/{id}"), prefijar host
-    if (u.startsWith('/')) return `http://localhost:8080${u}`;
+    // Si el backend devuelve ruta relativa ("/api/profile/avatar/{id}"), prefijar host dinámico
+    if (u.startsWith('/')) return `${API_ORIGIN}${u}`;
     return u;
   }
 }
