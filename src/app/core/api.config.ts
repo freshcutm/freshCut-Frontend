@@ -15,6 +15,10 @@ export const API_BASE_URL: string = (() => {
 // devuelve rutas relativas que empiezan por "/api/..."
 export const API_ORIGIN: string = (() => {
   try {
+    // Si es ruta relativa ("/api"), el origen es el del navegador
+    if (API_BASE_URL.startsWith('/')) {
+      return typeof window !== 'undefined' && window.location ? `${window.location.protocol}//${window.location.host}` : 'http://localhost:4200';
+    }
     const u = new URL(API_BASE_URL);
     return `${u.protocol}//${u.host}`;
   } catch {
