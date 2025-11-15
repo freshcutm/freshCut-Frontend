@@ -89,6 +89,16 @@ body {
   background-color: #ECECEC;
 }
 
+/* Variante dorada sólida para alta visibilidad en fondos oscuros */
+.btn-gold {
+  background-color: var(--color-accent);
+  color: var(--color-dark-text);
+  border: 1px solid var(--color-accent);
+}
+.btn-gold:hover {
+  background-color: #C79B3F; /* tono de acento ligeramente más oscuro */
+}
+
 /* Logo minimalista */
 .logo-mark {
   width: 28px;
