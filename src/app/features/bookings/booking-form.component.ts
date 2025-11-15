@@ -69,19 +69,13 @@ import { NotificationsService } from '../../ui/notifications.service';
               <option *ngFor="let b of barbers" [ngValue]="b">{{ b.name }}</option>
             </select>
           </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Servicio</label>
-            <select [(ngModel)]="service" name="service" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-              <option *ngFor="let s of services" [ngValue]="s">{{ s.name }}</option>
-            </select>
-          </div>
         </div>
 
         <!-- Se eliminó el chat; usar la página "/ia" para recomendaciones -->
 
         <div class="flex flex-wrap gap-3 mt-2">
           <button class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700" type="submit">Reservar</button>
-          <a routerLink="/reservas" href="/reservas" class="w-full sm:w-auto border px-4 py-2 rounded text-center">Ver mis reservas</a>
+          <a routerLink="/reservas" href="/reservas" class="btn btn-outline w-full sm:w-auto text-center">Ver mis reservas</a>
         </div>
       </form>
     </div>
