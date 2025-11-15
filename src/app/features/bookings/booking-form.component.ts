@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
 import { BookingService } from '../../core/booking.service';
 import { AuthService } from '../../core/auth.service';
@@ -14,7 +15,7 @@ import { NotificationsService } from '../../ui/notifications.service';
 @Component({
   selector: 'app-booking-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <div class="max-w-2xl mx-auto p-8 bg-white shadow-sm border rounded-lg">
       <h2 class="text-2xl font-semibold mb-6">Nueva reserva</h2>
@@ -80,7 +81,7 @@ import { NotificationsService } from '../../ui/notifications.service';
 
         <div class="flex flex-wrap gap-3 mt-2">
           <button class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700" type="submit">Reservar</button>
-          <a routerLink="/reservas" class="w-full sm:w-auto border px-4 py-2 rounded text-center">Ver mis reservas</a>
+          <a routerLink="/reservas" href="/reservas" class="w-full sm:w-auto border px-4 py-2 rounded text-center">Ver mis reservas</a>
         </div>
       </form>
     </div>
