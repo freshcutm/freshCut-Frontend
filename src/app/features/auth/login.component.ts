@@ -22,7 +22,12 @@ import { NotificationsService } from '../../ui/notifications.service';
           <input [(ngModel)]="password" name="password" type="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
         </div>
         <div class="flex items-center gap-3">
-          <button class="w-full sm:w-auto btn btn-primary" type="submit">Entrar</button>
+          <button [disabled]="loadingLogin" [class.loading]="loadingLogin" class="w-full sm:w-auto btn btn-primary" type="submit">
+            <ng-container *ngIf="!loadingLogin; else loadingLoginTpl">Entrar</ng-container>
+            <ng-template #loadingLoginTpl>
+              <span class="flex items-center gap-2"><span class="spinner"></span> Cargando...</span>
+            </ng-template>
+          </button>
           <a routerLink="/auth/register" class="text-indigo-600 hover:underline">Crear cuenta</a>
           <a routerLink="/auth/reset" class="text-gray-600 hover:underline">¿Olvidaste tu contraseña?</a>
         </div>
@@ -33,10 +38,12 @@ import { NotificationsService } from '../../ui/notifications.service';
 export class LoginComponent {
   email = '';
   password = '';
+  loadingLogin = false;
 
   constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
 
   async login() {
+    this.loadingLogin = true;
     try {
       const email = (this.email || '').trim();
       const password = this.password || '';
@@ -51,6 +58,8 @@ export class LoginComponent {
       else this.router.navigateByUrl('/reservas');
     } catch (e: any) {
       this.notifications.error(e?.error?.message || 'No se pudo iniciar sesión');
+    } finally {
+      this.loadingLogin = false;
     }
   }
 }
