@@ -154,6 +154,16 @@ export class AiPageComponent implements OnInit, OnDestroy {
 
   constructor(private ai: AiService) {}
 
+  private isRelevantText(text: string | null | undefined): boolean {
+    const t = (text || '').toLowerCase();
+    if (!t.trim()) return false;
+    const kw = [
+      'corte', 'barba', 'estilo', 'estética', 'facciones', 'cara', 'rostro',
+      'cabello', 'pelo', 'textura', 'tipo de cabello', 'barbería', 'barbero'
+    ];
+    return kw.some(k => t.includes(k));
+  }
+
   onImageSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -414,6 +424,11 @@ export class AiPageComponent implements OnInit, OnDestroy {
   }
 
   generateRecommendations() {
+    const relevant = !!this.imgFile || this.isRelevantText(this.notes);
+    if (!relevant) {
+      this.textErrorMsg = 'Puedo ayudarte solo con recomendaciones de cortes, estilos, barba o facciones. ¿Quieres describir tu rostro o subir una foto?';
+      return;
+    }
     if (!this.imgFile) { this.textErrorMsg = 'Selecciona una foto primero.'; return; }
     this.textLoading = true;
     this.recommendations = null;
