@@ -35,7 +35,7 @@ import { firstValueFrom } from 'rxjs';
               </div>
             </div>
             <div class="flex items-center gap-3 mt-2 flex-wrap">
-              <button type="button" (click)="takeSnapshot()" class="btn btn-outline">Tomar foto</button>
+              <button type="button" (click)="takeSnapshot()" class="btn btn-primary">Tomar foto</button>
               <button type="button" (click)="takeSnapshotWithCountdown()" class="border border-neutral-600 px-3 py-2 rounded hover:bg-neutral-800">Foto en 3s</button>
               <button type="button" (click)="stopCamera()" class="border border-neutral-600 px-3 py-2 rounded hover:bg-neutral-800">Cerrar cámara</button>
               <button type="button" (click)="switchFacing()" class="border border-neutral-600 px-3 py-2 rounded hover:bg-neutral-800">Cambiar a {{ selectedFacing === 'user' ? 'trasera' : 'frontal' }}</button>

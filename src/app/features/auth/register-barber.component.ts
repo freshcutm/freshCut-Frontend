@@ -27,7 +27,7 @@ import { NotificationsService } from '../../ui/notifications.service';
         </div>
 
         <p class="text-xs text-gray-500">Se creará automáticamente tu perfil de barbero.</p>
-        <button class="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" type="submit">Crear cuenta de barbero</button>
+        <button class="w-full sm:w-auto btn btn-primary" type="submit">Crear cuenta de barbero</button>
         <div class="text-sm text-gray-600 mt-3">
           ¿Quieres crear una cuenta normal? <a routerLink="/auth/register" class="text-indigo-600 hover:underline">Registrarme como usuario</a>
         </div>

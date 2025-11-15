@@ -78,7 +78,6 @@ import { NotificationsService } from '../../ui/notifications.service';
 
         <!-- Se eliminó el chat; usar la página "/ia" para recomendaciones -->
 
-        <button class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 justify-self-start text-center" type="submit">Guardar</button>
         <div class="flex flex-wrap gap-3 mt-2">
           <button class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700" type="submit">Reservar</button>
           <a routerLink="/reservas" class="w-full sm:w-auto border px-4 py-2 rounded text-center">Ver mis reservas</a>
