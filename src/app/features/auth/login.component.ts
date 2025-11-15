@@ -22,7 +22,7 @@ import { NotificationsService } from '../../ui/notifications.service';
           <input [(ngModel)]="password" name="password" type="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
         </div>
         <div class="flex items-center gap-3">
-          <button class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700" type="submit">Entrar</button>
+          <button class="w-full sm:w-auto btn btn-primary" type="submit">Entrar</button>
           <a routerLink="/auth/register" class="text-indigo-600 hover:underline">Crear cuenta</a>
           <a routerLink="/auth/reset" class="text-gray-600 hover:underline">¿Olvidaste tu contraseña?</a>
         </div>

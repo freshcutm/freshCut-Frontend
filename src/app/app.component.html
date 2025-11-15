@@ -5,12 +5,12 @@
         <title>FreshCut</title>
         <defs>
           <linearGradient id="fcGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#4f46e5"/>
-            <stop offset="100%" stop-color="#a5b4fc"/>
+            <stop offset="0%" stop-color="#D4A857"/>
+            <stop offset="100%" stop-color="#1E3A56"/>
           </linearGradient>
         </defs>
         <!-- Emblema redondeado -->
-        <rect x="6" y="6" width="36" height="36" rx="12" fill="#0f172a" stroke="url(#fcGrad)" stroke-width="2.5"/>
+        <rect x="6" y="6" width="36" height="36" rx="12" fill="#0A1A2F" stroke="url(#fcGrad)" stroke-width="2.5"/>
         <!-- Tijeras estilizadas -->
         <g fill="none" stroke="url(#fcGrad)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <!-- mangos simétricos -->
@@ -35,7 +35,7 @@
     <span class="ml-auto"></span>
     <ng-container *ngIf="!auth.isLoggedIn(); else logged">
       <a routerLink="/auth/login" class="btn btn-primary">Entrar</a>
-      <a routerLink="/auth/register" class="btn btn-outline">Crear cuenta</a>
+      <a routerLink="/auth/register" class="btn btn-primary">Crear cuenta</a>
     </ng-container>
     <ng-template #logged>
       <span class="hidden sm:inline text-sm text-indigo-200">{{ auth.email() }}</span>

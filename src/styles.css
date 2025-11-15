@@ -24,15 +24,28 @@ html, body, input, select, textarea, button {
   font-weight: 500;
 }
 .barber-accent {
-  color: #818cf8; /* indigo-400 */
+  color: var(--color-accent);
 }
 
 /* Variables de marca */
 :root {
-  --brand-amber: #4f46e5; /* indigo-600 */
-  --brand-amber-hover: #4338ca; /* indigo-700 */
-  --brand-dark: #0a0a0a; /* near black */
-  --border-neutral: #e5e7eb; /* gray-200 */
+  --color-primary: #0A1A2F;
+  --color-secondary: #1E3A56;
+  --color-accent: #D4A857;
+  --color-light-bg: #DFE3E8;
+  --color-navbar: #F5F5F5;
+  --color-dark-text: #1C1C1C;
+  --color-light-text: #FFFFFF;
+
+  --brand-amber: var(--color-primary);
+  --brand-amber-hover: var(--color-secondary);
+  --brand-dark: var(--color-dark-text);
+  --border-neutral: #E0E0E0;
+}
+
+body {
+  background-color: var(--color-light-bg);
+  color: var(--color-dark-text);
 }
 
 /* Botones globales */
@@ -54,26 +67,26 @@ html, body, input, select, textarea, button {
 }
 .btn-primary {
   background-color: var(--brand-amber);
-  color: #111827; /* gray-900 */
+  color: var(--color-light-text) !important;
 }
 .btn-primary:hover {
   background-color: var(--brand-amber-hover);
 }
 .btn-outline {
-  border: 1px solid var(--brand-amber);
-  color: var(--brand-amber);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
   background-color: transparent;
 }
 .btn-outline:hover {
-  background-color: rgba(79, 70, 229, 0.12); /* indigo */
+  background-color: rgba(212, 168, 87, 0.12);
 }
 .btn-muted {
-  border: 1px solid #d1d5db; /* gray-300 */
-  color: #111827; /* gray-900 */
-  background-color: #f9fafb; /* gray-50 */
+  border: 1px solid #D0D4DA;
+  color: var(--color-dark-text);
+  background-color: var(--color-light-bg);
 }
 .btn-muted:hover {
-  background-color: #f3f4f6; /* gray-100 */
+  background-color: #ECECEC;
 }
 
 /* Logo minimalista */
@@ -87,3 +100,29 @@ html, body, input, select, textarea, button {
 :root {
   color-scheme: light;
 }
+
+.text-indigo-600 { color: var(--color-accent) !important; }
+.text-indigo-500 { color: var(--color-accent) !important; }
+.text-indigo-400 { color: var(--color-accent) !important; }
+.bg-indigo-600 { background-color: var(--color-secondary) !important; color: var(--color-light-text) !important; }
+.hover\:bg-indigo-700:hover { background-color: var(--color-primary) !important; color: var(--color-light-text) !important; }
+.border-indigo-600 { border-color: var(--color-secondary) !important; }
+.border-indigo-500 { border-color: var(--color-secondary) !important; }
+.ring-indigo-500 { --tw-ring-color: var(--color-accent) !important; }
+.focus\:ring-indigo-500:focus { --tw-ring-color: var(--color-accent) !important; }
+
+.bg-white { background-color: var(--color-light-bg) !important; }
+.bg-gray-50 { background-color: var(--color-light-bg) !important; }
+.text-gray-600 { color: var(--color-dark-text) !important; }
+.text-gray-100 { color: var(--color-light-text) !important; }
+.border-gray-300 { border-color: #D0D4DA !important; }
+.bg-neutral-900 { background-color: var(--color-primary) !important; }
+.border-neutral-700 { border-color: var(--color-secondary) !important; }
+.text-indigo-300 { color: var(--color-secondary) !important; }
+.text-indigo-200 { color: var(--color-secondary) !important; }
+.hover\:text-indigo-300:hover { color: var(--color-secondary) !important; }
+.bg-gray-900\/70 { background-color: var(--color-light-bg) !important; }
+main.bg-gradient-to-b { background-image: linear-gradient(to bottom, #E5E7EB, #F3F4F6) !important; }
+
+header.sticky.top-0 { background-color: var(--color-navbar) !important; color: var(--color-dark-text) !important; }
+header.sticky.top-0 a:not(.btn) { color: var(--color-dark-text) !important; }
