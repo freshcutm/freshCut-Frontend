@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterOutlet, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './core/auth.service';
 import { ToastContainerComponent } from './ui/toast-container.component';
@@ -14,12 +14,21 @@ import { ConfirmDialogComponent } from './ui/confirm-dialog.component';
 })
 export class AppComponent implements OnInit {
   title = 'frontend';
-  constructor(public auth: AuthService) {}
+  isLoginRoute = false;
+  isRegisterRoute = false;
+  constructor(public auth: AuthService, private router: Router) {}
   ngOnInit(): void {
     if (this.auth.isLoggedIn()) {
-      // Sincroniza email/rol con el token al arrancar
       this.auth.me();
     }
+    this.updateRouteFlags(this.router.url);
+    this.router.events.subscribe(e => {
+      if (e instanceof NavigationEnd) this.updateRouteFlags(e.urlAfterRedirects);
+    });
   }
   logout() { this.auth.logout(); }
+  private updateRouteFlags(url: string) {
+    this.isLoginRoute = url.startsWith('/auth/login');
+    this.isRegisterRoute = url.startsWith('/auth/register');
+  }
 }
