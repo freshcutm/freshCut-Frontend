@@ -14,7 +14,7 @@ import { ConfirmService } from '../../ui/confirm.service';
     <div class="max-w-5xl mx-auto px-4 sm:px-0">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
         <h2 class="text-2xl font-semibold">Reservas</h2>
-        <a routerLink="/reservas/nueva" class="bg-indigo-600 text-white px-4 py-2 rounded w-full md:w-auto text-center">Nueva</a>
+        <a *ngIf="auth.role() === 'USER'" routerLink="/reservas/nueva" class="bg-indigo-600 text-white px-4 py-2 rounded w-full md:w-auto text-center">Nueva</a>
       </div>
       <div class="text-sm text-gray-600 mb-2" *ngIf="auth.role() !== 'ADMIN'">
         Mostrando solo tus reservas ({{ auth.email() }}).
