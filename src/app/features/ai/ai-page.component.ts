@@ -67,7 +67,7 @@ import { firstValueFrom } from 'rxjs';
             <label for="autoMode" class="text-sm text-gray-300">Generar recomendaciones automáticamente</label>
           </div>
           <div class="flex flex-wrap gap-2 mt-3">
-            <button (click)="generateRecommendations()" [disabled]="textLoading || !imgFile" class="btn btn-primary w-full sm:w-auto">
+            <button (click)="generateRecommendations()" [disabled]="textLoading || !imgFile" class="btn btn-outline w-full sm:w-auto">
               {{ textLoading ? 'Generando...' : 'Generar recomendaciones con IA' }}
             </button>
             <button (click)="clearImage()" class="btn btn-muted w-full sm:w-auto">Limpiar</button>
