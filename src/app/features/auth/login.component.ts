@@ -44,10 +44,10 @@ export class LoginComponent {
         return;
       }
       const res = await this.auth.login(email, password);
-      if (res.role === 'BARBER') this.router.navigateByUrl('/barbero');
-      else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin');
-      else if (res.role === 'USER') this.router.navigateByUrl('/cliente');
-      else this.router.navigateByUrl('/reservas');
+      if (res.role === 'BARBER') this.router.navigateByUrl('/barbero', { replaceUrl: true });
+      else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin', { replaceUrl: true });
+      else if (res.role === 'USER') this.router.navigateByUrl('/cliente', { replaceUrl: true });
+      else this.router.navigateByUrl('/reservas', { replaceUrl: true });
     } catch (e: any) {
       this.notifications.error(e?.error?.message || 'No se pudo iniciar sesión');
     }
