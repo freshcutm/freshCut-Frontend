@@ -54,11 +54,11 @@ import { NotificationsService } from '../../ui/notifications.service';
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Fecha</label>
-            <input [(ngModel)]="date" name="date" type="date" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+            <input [(ngModel)]="date" name="date" type="date" [min]="minDate" (change)="onDateChange()" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Hora</label>
-            <input [(ngModel)]="time" name="time" type="time" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+            <input [(ngModel)]="time" name="time" type="time" [attr.min]="minTime" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
           </div>
         </div>
 
@@ -90,6 +90,8 @@ export class BookingFormComponent implements OnInit {
   
   barbers: Barber[] = [];
   services: ServiceItem[] = [];
+  minDate = '';
+  minTime: string | null = null;
 
   constructor(
     private bookingService: BookingService,
@@ -102,6 +104,7 @@ export class BookingFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.currency.warmup();
+    this.minDate = this.formatDate(new Date());
     this.catalog.listBarbers().subscribe({
       next: (data) => this.barbers = data,
       error: (err) => {
@@ -129,6 +132,10 @@ export class BookingFormComponent implements OnInit {
     const client = this.auth.email() || 'Invitado';
     const barberName = this.barber ? this.barber.name : '';
     const serviceName = this.service ? this.service.name : '';
+    if (new Date(start).getTime() < new Date().getTime()) {
+      this.notifications.error('Selecciona una fecha y hora futuras');
+      return;
+    }
     this.bookingService.create({ clientName: client, barber: barberName, service: serviceName, startTime: start, endTime: end }).subscribe({
       next: () => {
         this.notifications.success('Reserva creada');
@@ -161,5 +168,25 @@ export class BookingFormComponent implements OnInit {
 
   realDuration(s: ServiceItem): number {
     return realDurationMinutes(s.name, s.durationMinutes);
+  }
+
+  private formatDate(d: Date): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  onDateChange() {
+    const today = this.formatDate(new Date());
+    if (this.date === today) {
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      this.minTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      if (this.time && this.minTime && this.time < this.minTime) this.time = this.minTime;
+    } else {
+      this.minTime = null;
+    }
   }
 }
