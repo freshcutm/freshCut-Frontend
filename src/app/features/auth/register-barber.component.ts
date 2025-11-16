@@ -24,6 +24,9 @@ import { NotificationsService } from '../../ui/notifications.service';
         <div>
           <label class="block text-sm font-medium">Contraseña</label>
           <input [(ngModel)]="password" name="password" type="password" class="w-full border rounded px-3 py-2" required />
+          <p class="mt-1 text-xs" [ngClass]="isStrongPassword(password) ? 'text-gray-500' : 'text-red-600'">
+            Debe tener mínimo 8 caracteres, incluir mayúscula, minúscula, número y carácter especial.
+          </p>
         </div>
 
         <p class="text-xs text-gray-500">Se creará automáticamente tu perfil de barbero.</p>
@@ -43,6 +46,11 @@ export class RegisterBarberComponent {
   constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
 
   async register() {
+    // Validación de contraseña fuerte: mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial
+    if (!this.isStrongPassword(this.password)) {
+      this.notifications.error('No se pudo crear cuenta: contraseña inválida. Debe tener mínimo 8 caracteres, incluir mayúscula, minúscula, número y carácter especial.');
+      return;
+    }
     try {
       await this.auth.register(this.name, this.email, this.password, 'BARBER');
       this.notifications.success('Cuenta de barbero creada. Ahora inicia sesión.');
@@ -50,5 +58,10 @@ export class RegisterBarberComponent {
     } catch (e: any) {
       this.notifications.error(e?.error?.message || e?.error?.error || e?.message || 'No se pudo registrar');
     }
+  }
+
+  isStrongPassword(pw: string): boolean {
+    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    return re.test(pw || '');
   }
 }

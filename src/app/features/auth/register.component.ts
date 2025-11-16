@@ -24,6 +24,9 @@ import { NotificationsService } from '../../ui/notifications.service';
         <div>
           <label class="block text-sm font-medium mb-1">Contraseña</label>
           <input [(ngModel)]="password" name="password" type="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+          <p class="mt-1 text-xs" [ngClass]="isStrongPassword(password) ? 'text-gray-500' : 'text-red-600'">
+            Debe tener mínimo 8 caracteres, incluir mayúscula, minúscula, número y carácter especial.
+          </p>
         </div>
         <div class="flex items-center gap-3">
           <button class="w-full sm:w-auto btn btn-primary" type="submit">Crear cuenta</button>
@@ -41,6 +44,11 @@ export class RegisterComponent {
   constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
 
   async register() {
+    // Validación de contraseña fuerte: mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial
+    if (!this.isStrongPassword(this.password)) {
+      this.notifications.error('No se pudo crear cuenta: contraseña inválida. Debe tener mínimo 8 caracteres, incluir mayúscula, minúscula, número y carácter especial.');
+      return;
+    }
     try {
       await this.auth.register(this.name, this.email, this.password);
       this.notifications.success('Cuenta creada correctamente. Ahora inicia sesión.');
@@ -48,5 +56,10 @@ export class RegisterComponent {
     } catch (e: any) {
       this.notifications.error(e?.error?.message || e?.error?.error || e?.message || 'No se pudo registrar');
     }
+  }
+
+  isStrongPassword(pw: string): boolean {
+    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    return re.test(pw || '');
   }
 }
