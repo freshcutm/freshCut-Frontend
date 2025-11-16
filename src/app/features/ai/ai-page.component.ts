@@ -67,7 +67,7 @@ import { firstValueFrom } from 'rxjs';
             <label for="autoMode" class="text-sm text-gray-300">Generar recomendaciones automáticamente</label>
           </div>
           <div class="flex flex-wrap gap-2 mt-3">
-            <button (click)="generateRecommendations()" [disabled]="textLoading || !imgFile" class="btn btn-outline w-full sm:w-auto">
+            <button (click)="generateRecommendations()" [disabled]="textLoading" class="btn btn-outline w-full sm:w-auto">
               {{ textLoading ? 'Generando...' : 'Generar recomendaciones con IA' }}
             </button>
             <button (click)="clearImage()" class="btn btn-muted w-full sm:w-auto">Limpiar</button>
@@ -424,40 +424,69 @@ export class AiPageComponent implements OnInit, OnDestroy {
   }
 
   generateRecommendations() {
-    const relevant = !!this.imgFile || this.isRelevantText(this.notes);
-    if (!relevant) {
-      this.textErrorMsg = 'Puedo ayudarte solo con recomendaciones de cortes, estilos, barba o facciones. ¿Quieres describir tu rostro o subir una foto?';
+    const hasPhoto = !!this.imgFile;
+    const hasText = this.isRelevantText(this.notes) || !!(this.notes && this.notes.trim());
+    if (!hasPhoto && !hasText) {
+      this.textErrorMsg = 'Escribe notas breves sobre tu rostro o estilos, o sube una foto.';
       return;
     }
-    if (!this.imgFile) { this.textErrorMsg = 'Selecciona una foto primero.'; return; }
     this.textLoading = true;
     this.recommendations = null;
     this.textErrorMsg = '';
-    firstValueFrom(this.ai.recommendFromPhoto(this.imgFile, this.notes || undefined)).then(res => {
-      this.recommendations = res.reply || '';
-      this.parseRecommendations(this.recommendations);
-    }).catch(async (e: any) => {
-      let msg = 'No se pudo generar recomendaciones.';
-      try {
-        if (e?.status === 0) {
-          msg = 'No se pudo conectar con el servidor (¿backend detenido o puerto incorrecto?).';
-        } else if (e?.error) {
-          if (e.error instanceof Blob) {
-            const text = await e.error.text();
-            if (text && text.trim()) msg = text.trim();
-          } else if (typeof e.error === 'string') {
-            msg = e.error;
-          } else if (typeof e.error?.message === 'string') {
-            msg = e.error.message;
+    if (hasPhoto) {
+      firstValueFrom(this.ai.recommendFromPhoto(this.imgFile!, this.notes || undefined)).then(res => {
+        this.recommendations = res.reply || '';
+        this.parseRecommendations(this.recommendations);
+      }).catch(async (e: any) => {
+        let msg = 'No se pudo generar recomendaciones.';
+        try {
+          if (e?.status === 0) {
+            msg = 'No se pudo conectar con el servidor (¿backend detenido o puerto incorrecto?).';
+          } else if (e?.error) {
+            if (e.error instanceof Blob) {
+              const text = await e.error.text();
+              if (text && text.trim()) msg = text.trim();
+            } else if (typeof e.error === 'string') {
+              msg = e.error;
+            } else if (typeof e.error?.message === 'string') {
+              msg = e.error.message;
+            }
+          } else if (typeof e?.message === 'string') {
+            msg = e.message;
           }
-        } else if (typeof e?.message === 'string') {
-          msg = e.message;
-        }
-      } catch {}
-      this.textErrorMsg = msg;
-    }).finally(() => {
-      this.textLoading = false;
-    });
+        } catch {}
+        this.textErrorMsg = msg;
+      }).finally(() => {
+        this.textLoading = false;
+      });
+    } else {
+      const prompt = `Quiero recomendaciones de cortes y estilos basadas en esta descripción: ${this.notes || ''}. Responde breve con opciones numeradas y consejos de mantenimiento y cosas a evitar.`;
+      firstValueFrom(this.ai.chat({ messages: [{ role: 'user', content: prompt }] })).then(res => {
+        this.recommendations = res.reply || '';
+        this.parseRecommendations(this.recommendations);
+      }).catch(async (e: any) => {
+        let msg = 'No se pudo generar recomendaciones.';
+        try {
+          if (e?.status === 0) {
+            msg = 'No se pudo conectar con el servidor (¿backend detenido o puerto incorrecto?).';
+          } else if (e?.error) {
+            if (e.error instanceof Blob) {
+              const text = await e.error.text();
+              if (text && text.trim()) msg = text.trim();
+            } else if (typeof e.error === 'string') {
+              msg = e.error;
+            } else if (typeof e.error?.message === 'string') {
+              msg = e.error.message;
+            }
+          } else if (typeof e?.message === 'string') {
+            msg = e.message;
+          }
+        } catch {}
+        this.textErrorMsg = msg;
+      }).finally(() => {
+        this.textLoading = false;
+      });
+    }
   }
 
   clearImage() {
