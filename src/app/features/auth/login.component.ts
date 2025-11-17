@@ -22,7 +22,12 @@ import { NotificationsService } from '../../ui/notifications.service';
           <input [(ngModel)]="password" name="password" type="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
         </div>
         <div class="flex items-center gap-3">
-          <button class="w-full sm:w-auto btn btn-primary" type="submit">Entrar</button>
+          <button class="w-full sm:w-auto btn btn-primary" type="submit" [disabled]="isSubmitting">Entrar</button>
+        </div>
+
+        <div *ngIf="showSpinner" class="flex items-center gap-2 text-sm text-gray-600">
+          <span class="inline-block w-4 h-4 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></span>
+          <span>Iniciando sesión...</span>
         </div>
       </form>
     </div>
@@ -31,6 +36,9 @@ import { NotificationsService } from '../../ui/notifications.service';
 export class LoginComponent {
   email = '';
   password = '';
+  isSubmitting = false;
+  showSpinner = false;
+  private loadingTimeout: any;
 
   constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
 
@@ -42,6 +50,13 @@ export class LoginComponent {
         this.notifications.error('Introduce un email y contraseña válidos');
         return;
       }
+      // Marcar envío y preparar spinner retrasado (2s)
+      this.isSubmitting = true;
+      this.showSpinner = false;
+      this.loadingTimeout = setTimeout(() => {
+        if (this.isSubmitting) this.showSpinner = true;
+      }, 2000);
+
       const res = await this.auth.login(email, password);
       if (res.role === 'BARBER') this.router.navigateByUrl('/barbero', { replaceUrl: true });
       else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin', { replaceUrl: true });
@@ -49,6 +64,15 @@ export class LoginComponent {
       else this.router.navigateByUrl('/reservas', { replaceUrl: true });
     } catch (e: any) {
       this.notifications.error(e?.error?.message || 'No se pudo iniciar sesión');
+    }
+    finally {
+      // Limpiar estado de carga
+      this.isSubmitting = false;
+      this.showSpinner = false;
+      if (this.loadingTimeout) {
+        clearTimeout(this.loadingTimeout);
+        this.loadingTimeout = null;
+      }
     }
   }
 }

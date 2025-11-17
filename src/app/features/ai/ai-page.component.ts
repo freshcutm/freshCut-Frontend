@@ -434,7 +434,17 @@ export class AiPageComponent implements OnInit, OnDestroy {
     this.recommendations = null;
     this.textErrorMsg = '';
     firstValueFrom(this.ai.recommendFromPhoto(this.imgFile, this.notes || undefined)).then(res => {
-      this.recommendations = res.reply || '';
+      const reply = (res.reply || '').trim();
+      const isIrrelevant = reply.includes('Puedo ayudarte solo con recomendaciones de cortes, estilos, barba o facciones');
+      if (isIrrelevant) {
+        this.textErrorMsg = 'No se pudo realizar recomendaciones ya que se compartió una imagen que no tiene que ver con el propósito de la web. Por favor vuelve a intentarlo con otra imagen.';
+        this.recommendations = null;
+        this.optionsList = [];
+        this.maintenanceText = '';
+        this.avoidText = '';
+        return;
+      }
+      this.recommendations = reply;
       this.parseRecommendations(this.recommendations);
     }).catch(async (e: any) => {
       let msg = 'No se pudo generar recomendaciones.';
