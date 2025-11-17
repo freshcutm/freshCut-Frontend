@@ -267,7 +267,8 @@ export class AdminControlComponent implements OnInit {
 
   toggleServiceActive(s: ServiceItem): void {
     if (!s?.id) return;
-    this.adminService.updateService(s.id, { ...s, active: !s.active }).subscribe({
+    // Usa Command + UndoStack sin cambiar la UI
+    this.adminService.toggleServiceActiveWithUndo(s).subscribe({
       next: () => this.loadServices(),
       error: (err: any) => (this.serviceError = err?.error?.error || 'No se pudo actualizar servicio'),
     });

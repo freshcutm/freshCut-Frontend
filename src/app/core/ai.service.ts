@@ -1,7 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, from } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { API_AI_URL } from './api.config';
+import { LRUCache } from './datastructures/lru-cache';
+import { RequestQueue } from './datastructures/request-queue';
+import { firstValueFrom } from 'rxjs';
 
 export interface AiMessage {
   role: 'user' | 'assistant';
@@ -19,10 +23,20 @@ export interface ChatResponse { reply: string; }
 export class AiService {
   // URL del módulo de IA, configurable por runtime
   private baseUrl = API_AI_URL;
+  // Caché LRU para respuestas de IA (estructura de datos aplicada)
+  private cache = new LRUCache<string, ChatResponse>(50);
+  // Cola FIFO para serializar peticiones a IA (evita ráfagas)
+  private queue = new RequestQueue();
   constructor(private http: HttpClient) {}
 
   chat(req: ChatRequest): Observable<ChatResponse> {
-    return this.http.post<ChatResponse>(`${this.baseUrl}/chat`, req);
+    const key = this.cacheKeyForChat(req);
+    const cached = this.cache.get(key);
+    if (cached) return of(cached);
+    const obs = this.http.post<ChatResponse>(`${this.baseUrl}/chat`, req);
+    return from(this.queue.enqueue(() => firstValueFrom(obs))).pipe(
+      tap(res => this.cache.set(key, res))
+    );
   }
 
   editHair(
@@ -46,6 +60,24 @@ export class AiService {
     const form = new FormData();
     form.append('file', file);
     if (faceDescription) form.append('faceDescription', faceDescription);
-    return this.http.post<ChatResponse>(`${this.baseUrl}/recommend-from-photo`, form);
+    const key = this.cacheKeyForPhoto(file, faceDescription);
+    const cached = this.cache.get(key);
+    if (cached) return of(cached);
+    const obs = this.http.post<ChatResponse>(`${this.baseUrl}/recommend-from-photo`, form);
+    return from(this.queue.enqueue(() => firstValueFrom(obs))).pipe(
+      tap(res => this.cache.set(key, res))
+    );
+  }
+
+  private cacheKeyForChat(req: ChatRequest): string {
+    const face = (req.faceDescription || '').trim().toLowerCase();
+    const msgs = (req.messages || []).map(m => `${m.role}:${(m.content || '').trim().toLowerCase()}`).join('|');
+    return `chat:${face}:${msgs}`;
+  }
+
+  private cacheKeyForPhoto(file: File, faceDescription?: string): string {
+    const meta = `${file.name}|${file.size}|${file.lastModified}`;
+    const face = (faceDescription || '').trim().toLowerCase();
+    return `photo:${meta}:${face}`;
   }
 }

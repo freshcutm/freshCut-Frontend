@@ -21,10 +21,15 @@ import { NotificationsService } from '../../ui/notifications.service';
           <label class="block text-sm font-medium mb-1">Contraseña</label>
           <div class="relative">
             <input [(ngModel)]="password" name="password" [type]="showPassword ? 'text' : 'password'" autocomplete="current-password" class="w-full border rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
-            <button type="button" (click)="togglePassword()" aria-label="Mostrar/ocultar contraseña" class="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <button type="button" (click)="togglePassword()" [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" [attr.title]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" class="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">
+              <svg *ngIf="!showPassword" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showPassword" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M4 4l16 16" stroke-linecap="round"></path>
               </svg>
             </button>
           </div>
