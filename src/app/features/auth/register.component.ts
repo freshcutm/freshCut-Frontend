@@ -42,8 +42,12 @@ import { NotificationsService } from '../../ui/notifications.service';
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <button class="w-full sm:w-auto btn btn-primary" type="submit">Crear cuenta</button>
+          <button class="w-full sm:w-auto btn btn-primary" type="submit" [disabled]="isSubmitting">Crear cuenta</button>
           <a routerLink="/auth/register/barbero" class="text-indigo-600 hover:underline">Soy barbero</a>
+        </div>
+        <div *ngIf="showSpinner" class="flex items-center gap-2 text-sm text-gray-600">
+          <span class="inline-block w-4 h-4 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></span>
+          <span>Creando cuenta...</span>
         </div>
       </form>
     </div>
@@ -54,6 +58,9 @@ export class RegisterComponent {
   email = '';
   password = '';
   showPassword = false;
+  isSubmitting = false;
+  showSpinner = false;
+  private loadingTimeout: any;
 
   constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
 
@@ -64,11 +71,18 @@ export class RegisterComponent {
       return;
     }
     try {
+      this.isSubmitting = true;
+      this.showSpinner = false;
+      this.loadingTimeout = setTimeout(() => { if (this.isSubmitting) this.showSpinner = true; }, 1500);
       await this.auth.register(this.name, this.email, this.password);
       this.notifications.success('Cuenta creada correctamente. Ahora inicia sesión.');
       this.router.navigateByUrl('/auth/login');
     } catch (e: any) {
       this.notifications.error(e?.error?.message || e?.error?.error || e?.message || 'No se pudo registrar');
+    } finally {
+      this.isSubmitting = false;
+      this.showSpinner = false;
+      if (this.loadingTimeout) { clearTimeout(this.loadingTimeout); this.loadingTimeout = null; }
     }
   }
 

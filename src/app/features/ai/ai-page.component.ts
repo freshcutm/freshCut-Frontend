@@ -71,6 +71,10 @@ import { firstValueFrom } from 'rxjs';
               {{ textLoading ? 'Generando...' : 'Generar recomendaciones con IA' }}
             </button>
             <button (click)="clearImage()" class="btn btn-muted w-full sm:w-auto">Limpiar</button>
+            <div *ngIf="textLoading" class="flex items-center gap-2 text-xs text-gray-300">
+              <span class="inline-block w-4 h-4 border-2 border-neutral-500 border-t-indigo-500 rounded-full animate-spin"></span>
+              <span>Procesando foto y notas...</span>
+            </div>
           </div>
         </div>
       </div>
@@ -126,6 +130,10 @@ import { firstValueFrom } from 'rxjs';
       <div class="mt-2" *ngIf="textErrorMsg">
          <div class="text-red-400 text-sm">{{ textErrorMsg }}</div>
        </div>
+      <div *ngIf="loading" class="mt-2 flex items-center gap-2 text-xs text-gray-300">
+        <span class="inline-block w-4 h-4 border-2 border-neutral-500 border-t-indigo-500 rounded-full animate-spin"></span>
+        <span>Generando imagen...</span>
+      </div>
     </div>
   `
 })

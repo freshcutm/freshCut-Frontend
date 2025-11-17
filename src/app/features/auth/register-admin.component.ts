@@ -29,7 +29,11 @@ import { NotificationsService } from '../../ui/notifications.service';
             Debe tener mínimo 8 caracteres, incluir mayúscula, minúscula, número y carácter especial.
           </p>
         </div>
-        <button class="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" type="submit">Crear admin</button>
+        <button class="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" type="submit" [disabled]="isSubmitting">Crear admin</button>
+        <div *ngIf="showSpinner" class="mt-2 flex items-center gap-2 text-sm text-gray-600">
+          <span class="inline-block w-4 h-4 border-2 border-gray-300 border-t-green-600 rounded-full animate-spin"></span>
+          <span>Creando cuenta admin...</span>
+        </div>
       </form>
 
       <div class="text-sm text-gray-600 mt-4">
@@ -45,6 +49,9 @@ export class RegisterAdminComponent {
   name = '';
   email = '';
   password = '';
+  isSubmitting = false;
+  showSpinner = false;
+  private loadingTimeout: any;
 
   constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
 
@@ -55,11 +62,18 @@ export class RegisterAdminComponent {
       return;
     }
     try {
+      this.isSubmitting = true;
+      this.showSpinner = false;
+      this.loadingTimeout = setTimeout(() => { if (this.isSubmitting) this.showSpinner = true; }, 1500);
       await this.auth.register(this.name, this.email, this.password, 'ADMIN');
       this.notifications.success('Cuenta admin creada. Ahora inicia sesión.');
       this.router.navigateByUrl('/auth/login');
     } catch (e: any) {
       this.notifications.error(e?.error?.message || e?.error?.error || e?.message || 'No se pudo registrar');
+    } finally {
+      this.isSubmitting = false;
+      this.showSpinner = false;
+      if (this.loadingTimeout) { clearTimeout(this.loadingTimeout); this.loadingTimeout = null; }
     }
   }
 
