@@ -29,7 +29,7 @@
     </a>
     <nav class="hidden sm:flex items-center gap-2">
       <a routerLink="/reservas" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Reservas</a>
-      <a routerLink="/reservas/nueva" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Nueva</a>
+      <a *ngIf="auth.role() === 'USER'" routerLink="/reservas/nueva" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Nueva</a>
       <a routerLink="/ia" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Asistente IA</a>
     </nav>
     <span class="ml-auto"></span>

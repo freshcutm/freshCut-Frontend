@@ -13,7 +13,7 @@ export const routes: Routes = [
   { path: 'auth/register/barbero', loadComponent: () => import('./features/auth/register-barber.component').then(c => c.RegisterBarberComponent) },
   { path: 'cliente', canActivate: [userGuard], loadComponent: () => import('./features/client/client-dashboard.component').then(c => c.ClientDashboardComponent) },
   { path: 'reservas', canActivate: [authGuard], loadComponent: () => import('./features/bookings/booking-list.component').then(c => c.BookingListComponent) },
-  { path: 'reservas/nueva', canActivate: [authGuard], loadComponent: () => import('./features/bookings/booking-form.component').then(c => c.BookingFormComponent) },
+  { path: 'reservas/nueva', canActivate: [userGuard], loadComponent: () => import('./features/bookings/booking-form.component').then(c => c.BookingFormComponent) },
   { path: 'reservas/editar/:id', canActivate: [authGuard], loadComponent: () => import('./features/bookings/booking-edit.component').then(c => c.BookingEditComponent) },
   { path: 'ia', loadComponent: () => import('./features/ai/ai-page.component').then(c => c.AiPageComponent) },
   { path: 'admin', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin-dashboard.component').then(c => c.AdminDashboardComponent) },
