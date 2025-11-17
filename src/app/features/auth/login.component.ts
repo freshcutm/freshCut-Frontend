@@ -64,6 +64,12 @@ export class LoginComponent {
         this.notifications.error('Introduce un email y contraseña válidos');
         return;
       }
+      // Validación adicional de formato de email para evitar peticiones 400 por @Valid en backend
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        this.notifications.error('Email no válido');
+        return;
+      }
       // Marcar envío y preparar spinner retrasado (2s)
       this.isSubmitting = true;
       this.showSpinner = false;
