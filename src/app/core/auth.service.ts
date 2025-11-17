@@ -22,6 +22,10 @@ export class AuthService {
   async login(email: string, password: string) {
     const payload = { email: (email || '').trim(), password };
     const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/login`, payload));
+    // Evitar guardar sesión si el backend respondió éxito lógico pero sin token
+    if (!res?.token || !res.token.trim()) {
+      throw { error: { message: 'Credenciales inválidas' } };
+    }
     this.setSession(res);
     return res;
   }
@@ -70,6 +74,7 @@ export class AuthService {
   }
 
   private setSession(res: AuthResponse) {
+    if (!res?.token || !res.token.trim()) return; // no persistir sesiones inválidas
     this._token.set(res.token);
     this._email.set(res.email);
     this._role.set(res.role);
