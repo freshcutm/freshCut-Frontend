@@ -19,7 +19,15 @@ import { NotificationsService } from '../../ui/notifications.service';
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Contraseña</label>
-          <input [(ngModel)]="password" name="password" type="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+          <div class="relative">
+            <input [(ngModel)]="password" name="password" [type]="showPassword ? 'text' : 'password'" autocomplete="current-password" class="w-full border rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+            <button type="button" (click)="togglePassword()" aria-label="Mostrar/ocultar contraseña" class="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="flex items-center gap-3">
           <button class="w-full sm:w-auto btn btn-primary" type="submit" [disabled]="isSubmitting">Entrar</button>
@@ -36,6 +44,7 @@ import { NotificationsService } from '../../ui/notifications.service';
 export class LoginComponent {
   email = '';
   password = '';
+  showPassword = false;
   isSubmitting = false;
   showSpinner = false;
   private loadingTimeout: any;
@@ -74,5 +83,9 @@ export class LoginComponent {
         this.loadingTimeout = null;
       }
     }
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
   }
 }
