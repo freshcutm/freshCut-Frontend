@@ -74,7 +74,13 @@ import { NotificationsService } from '../../ui/notifications.service';
         <!-- Se eliminó el chat; usar la página "/ia" para recomendaciones -->
 
         <div class="flex flex-wrap gap-3 mt-2">
-          <button class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700" type="submit">Reservar</button>
+          <button [disabled]="isSubmitting" class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed" type="submit">
+            <span *ngIf="isSubmitting" class="inline-flex items-center gap-2">
+              <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              Procesando...
+            </span>
+            <span *ngIf="!isSubmitting">Reservar</span>
+          </button>
           <a routerLink="/reservas" href="/reservas" class="btn btn-outline w-full sm:w-auto text-center">Ver mis reservas</a>
         </div>
       </form>
@@ -92,6 +98,7 @@ export class BookingFormComponent implements OnInit {
   services: ServiceItem[] = [];
   minDate = '';
   minTime: string | null = null;
+  isSubmitting = false;
 
   constructor(
     private bookingService: BookingService,
@@ -126,6 +133,11 @@ export class BookingFormComponent implements OnInit {
   strokeFor(name: string): number { return serviceIconStrokeWidth(name); }
 
   submit() {
+    if (!this.auth.isLoggedIn() || this.auth.role() !== 'USER') {
+      this.notifications.error('Debes iniciar sesión como usuario para reservar');
+      return;
+    }
+    this.isSubmitting = true;
     const start = `${this.date}T${this.time}:00`;
     const duration = this.service?.durationMinutes ?? 30;
     const end = this.addMinutesToIso(start, duration);
@@ -134,14 +146,22 @@ export class BookingFormComponent implements OnInit {
     const serviceName = this.service ? this.service.name : '';
     if (new Date(start).getTime() < new Date().getTime()) {
       this.notifications.error('Selecciona una fecha y hora futuras');
+      this.isSubmitting = false;
       return;
     }
     this.bookingService.create({ clientName: client, barber: barberName, service: serviceName, startTime: start, endTime: end }).subscribe({
-      next: () => {
-        this.notifications.success('Reserva creada');
-        this.router.navigateByUrl('/reservas');
+      next: (res) => {
+        this.isSubmitting = false;
+        if (res && res.id) {
+          this.notifications.success('Reserva creada');
+          this.router.navigateByUrl('/reservas');
+        } else {
+          const msg = res?.error || 'No se pudo crear la reserva';
+          this.notifications.error(msg);
+        }
       },
       error: (err) => {
+        this.isSubmitting = false;
         if (err?.status === 401) { this.auth.logout(); return; }
         const msg = err?.error?.error || 'No se pudo crear la reserva';
         this.notifications.error(msg);

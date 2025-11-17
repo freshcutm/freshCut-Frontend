@@ -29,8 +29,9 @@ export class BookingService {
     return this.http.get<Booking[]>(`${this.baseUrl}/my`);
   }
 
-  create(payload: Booking): Observable<Booking> {
-    return this.http.post<Booking>(this.baseUrl, payload);
+  create(payload: Booking): Observable<any> {
+    // El backend puede responder 201 con Booking o 200 con { error: string }
+    return this.http.post(this.baseUrl, payload);
   }
 
   get(id: string): Observable<Booking> {

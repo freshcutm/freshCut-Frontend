@@ -19,6 +19,12 @@ import { ConfirmService } from '../../ui/confirm.service';
       <div class="text-sm text-gray-600 mb-2" *ngIf="auth.role() !== 'ADMIN'">
         Mostrando solo tus reservas ({{ auth.email() }}).
       </div>
+      <div *ngIf="loading" class="bg-white border rounded p-6 flex items-center justify-center mb-4">
+        <span class="inline-flex items-center gap-3 text-gray-600">
+          <span class="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+          Cargando reservas...
+        </span>
+      </div>
       <div class="bg-white shadow-sm border rounded divide-y overflow-x-auto">
         <div *ngFor="let b of bookings" class="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div class="break-words">
@@ -40,26 +46,30 @@ import { ConfirmService } from '../../ui/confirm.service';
 })
 export class BookingListComponent implements OnInit {
   bookings: Booking[] = [];
+  loading = true;
 
   constructor(private bookingService: BookingService, public auth: AuthService, private notifications: NotificationsService, private confirm: ConfirmService) {}
 
   ngOnInit(): void { this.load(); }
 
   load() {
+    this.loading = true;
     if (this.auth.role() === 'ADMIN') {
       this.bookingService.list().subscribe({
-        next: (data) => this.bookings = data,
+        next: (data) => { this.bookings = data; this.loading = false; },
         error: (err) => {
           if (err?.status === 401) { this.auth.logout(); return; }
           this.notifications.error(err?.error?.error || 'No se pudo cargar las reservas');
+          this.loading = false;
         }
       });
     } else {
       this.bookingService.my().subscribe({
-        next: (data) => this.bookings = data,
+        next: (data) => { this.bookings = data; this.loading = false; },
         error: (err) => {
           if (err?.status === 401) { this.auth.logout(); return; }
           this.notifications.error(err?.error?.error || 'No se pudo cargar tus reservas');
+          this.loading = false;
         }
       });
     }

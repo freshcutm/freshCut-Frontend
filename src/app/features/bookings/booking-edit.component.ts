@@ -15,6 +15,12 @@ import { NotificationsService } from '../../ui/notifications.service';
   template: `
     <div class="max-w-2xl mx-auto p-6 bg-white shadow rounded">
       <h2 class="barber-title text-3xl font-bold mb-4">Editar reserva</h2>
+      <div *ngIf="!loaded" class="bg-white border rounded p-6 flex items-center justify-center mb-4">
+        <span class="inline-flex items-center gap-3 text-gray-600">
+          <span class="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+          Cargando reserva...
+        </span>
+      </div>
       <form (ngSubmit)="save()" class="grid gap-4" *ngIf="loaded">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -58,6 +64,7 @@ export class BookingEditComponent implements OnInit {
   barber?: Barber;
   service?: ServiceItem;
   loaded = false;
+  isSaving = false;
   private originalClientName = '';
 
   barbers: Barber[] = [];
@@ -104,6 +111,7 @@ export class BookingEditComponent implements OnInit {
   }
 
   save() {
+    this.isSaving = true;
     const start = `${this.date}T${this.time}:00`;
     const duration = this.service?.durationMinutes ?? 30;
     const end = this.addMinutesToIso(start, duration);
@@ -116,10 +124,12 @@ export class BookingEditComponent implements OnInit {
     };
     this.bookingService.update(this.id, payload).subscribe({
       next: () => {
+        this.isSaving = false;
         this.notifications.success('Reserva actualizada');
         this.router.navigateByUrl('/reservas');
       },
       error: (err) => {
+        this.isSaving = false;
         if (err?.status === 401) { this.auth.logout(); return; }
         this.notifications.error(err?.error?.error || 'No se pudo actualizar la reserva');
       }

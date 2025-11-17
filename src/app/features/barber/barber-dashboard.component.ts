@@ -36,7 +36,10 @@ import { Barber } from '../../core/catalog.service';
                   <option [ngValue]="true">Activo</option>
                   <option [ngValue]="false">Inactivo</option>
                 </select>
-                <button (click)="saveActive()" class="bg-indigo-600 text-white px-3 py-1 rounded">Guardar</button>
+                <button (click)="saveActive()" class="bg-indigo-600 text-white px-3 py-1 rounded" [disabled]="isSavingActive">
+                  <span *ngIf="!isSavingActive">Guardar</span>
+                  <span *ngIf="isSavingActive">Guardando…</span>
+                </button>
               </div>
               <!-- NUEVO: edición básica de perfil -->
               <div class="mt-4 space-y-2">
@@ -60,7 +63,10 @@ import { Barber } from '../../core/catalog.service';
                   <label class="text-sm w-28">Acerca de mí:</label>
                   <textarea class="border rounded px-2 py-1 flex-1" [(ngModel)]="meBioDraft" rows="3" placeholder="Describe tu estilo y experiencia"></textarea>
                 </div>
-                <button (click)="saveBasics()" class="bg-indigo-600 text-white px-3 py-1 rounded">Guardar cambios</button>
+                <button (click)="saveBasics()" class="bg-indigo-600 text-white px-3 py-1 rounded" [disabled]="isSavingBasics">
+                  <span *ngIf="!isSavingBasics">Guardar cambios</span>
+                  <span *ngIf="isSavingBasics">Guardando…</span>
+                </button>
               </div>
             </div>
           </ng-container>
@@ -100,8 +106,14 @@ import { Barber } from '../../core/catalog.service';
                   <td class="py-2 pr-4">{{ formatDate(b.endTime) }}</td>
                   <td class="py-2 pr-4">{{ b.status || 'CONFIRMED' }}</td>
                   <td class="py-2 pr-4">
-                    <button *ngIf="canCancel(b)" (click)="cancelBooking(b)" class="text-red-600 underline">Cancelar</button>
-                    <button *ngIf="canComplete(b)" (click)="completeBooking(b)" class="ml-3 text-green-700 underline">Completar</button>
+                    <button *ngIf="canCancel(b)" (click)="cancelBooking(b)" class="text-red-600 underline" [disabled]="actionBookingId === b.id">
+                      <span *ngIf="actionBookingId !== b.id">Cancelar</span>
+                      <span *ngIf="actionBookingId === b.id">Cancelando…</span>
+                    </button>
+                    <button *ngIf="canComplete(b)" (click)="completeBooking(b)" class="ml-3 text-green-700 underline" [disabled]="actionBookingId === b.id">
+                      <span *ngIf="actionBookingId !== b.id">Completar</span>
+                      <span *ngIf="actionBookingId === b.id">Completando…</span>
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -124,8 +136,14 @@ import { Barber } from '../../core/catalog.service';
                 </select>
                 <input type="time" class="border rounded px-2 py-1" [(ngModel)]="s.startTime" />
                 <input type="time" class="border rounded px-2 py-1" [(ngModel)]="s.endTime" />
-                <button class="bg-indigo-600 text-white px-3 py-1 rounded" (click)="updateSchedule(s)">Guardar</button>
-                <button class="text-red-600 underline px-2" (click)="deleteSchedule(s)">Eliminar</button>
+                <button class="bg-indigo-600 text-white px-3 py-1 rounded" (click)="updateSchedule(s)" [disabled]="updatingScheduleId === s.id">
+                  <span *ngIf="updatingScheduleId !== s.id">Guardar</span>
+                  <span *ngIf="updatingScheduleId === s.id">Guardando…</span>
+                </button>
+                <button class="text-red-600 underline px-2" (click)="deleteSchedule(s)" [disabled]="deletingScheduleId === s.id">
+                  <span *ngIf="deletingScheduleId !== s.id">Eliminar</span>
+                  <span *ngIf="deletingScheduleId === s.id">Eliminando…</span>
+                </button>
               </div>
             </div>
           </div>
@@ -138,7 +156,10 @@ import { Barber } from '../../core/catalog.service';
               </select>
               <input type="time" class="border rounded px-2 py-1" [(ngModel)]="newStart" />
               <input type="time" class="border rounded px-2 py-1" [(ngModel)]="newEnd" />
-              <button class="bg-green-600 text-white px-3 py-1 rounded" (click)="createSchedule()">Añadir</button>
+              <button class="bg-green-600 text-white px-3 py-1 rounded" (click)="createSchedule()" [disabled]="isCreatingSchedule">
+                <span *ngIf="!isCreatingSchedule">Añadir</span>
+                <span *ngIf="isCreatingSchedule">Creando…</span>
+              </button>
             </div>
           </div>
         </div>
@@ -164,6 +185,14 @@ export class BarberDashboardComponent implements OnInit {
   viewFilter: 'UPCOMING' | 'HISTORY' | 'ALL' = 'UPCOMING';
   schedules?: Schedule[];
 
+  // Estados de guardado/acción
+  isSavingActive = false;
+  isSavingBasics = false;
+  actionBookingId?: string | number;
+  updatingScheduleId?: string | number;
+  deletingScheduleId?: string | number;
+  isCreatingSchedule = false;
+
   days: string[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
   newDay: string = 'MONDAY';
   newStart: string = '09:00';
@@ -182,9 +211,10 @@ export class BarberDashboardComponent implements OnInit {
 
   saveActive() {
     if (!this.me) return;
+    this.isSavingActive = true;
     this.barber.updateMe({ active: this.meActiveDraft }).subscribe({
-      next: (updated) => { this.me = updated; this.notifications.success('Estado actualizado'); },
-      error: () => this.notifications.error('No se pudo actualizar el estado')
+      next: (updated) => { this.me = updated; this.notifications.success('Estado actualizado'); this.isSavingActive = false; },
+      error: () => { this.notifications.error('No se pudo actualizar el estado'); this.isSavingActive = false; }
     });
   }
 
@@ -198,9 +228,10 @@ export class BarberDashboardComponent implements OnInit {
       .split(',')
       .map(s => s.trim())
       .filter(s => !!s);
+    this.isSavingBasics = true;
     this.barber.updateMe({ name: this.meNameDraft, specialties, cutTypes, experienceYears: this.meExperienceDraft, bio: this.meBioDraft }).subscribe({
-      next: (updated) => { this.me = updated; this.notifications.success('Perfil actualizado'); },
-      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo actualizar el perfil')
+      next: (updated) => { this.me = updated; this.notifications.success('Perfil actualizado'); this.isSavingBasics = false; },
+      error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo actualizar el perfil'); this.isSavingBasics = false; }
     });
   }
 
@@ -237,31 +268,36 @@ export class BarberDashboardComponent implements OnInit {
     if (!b.id) return;
     const ok = await this.confirm.confirm({ message: '¿Cancelar esta reserva?', confirmText: 'Sí, cancelar', cancelText: 'No' });
     if (!ok) return;
+    this.actionBookingId = b.id;
     this.barber.cancelBooking(b.id).subscribe({
-      next: () => { this.refreshBookings(); this.notifications.success('Reserva cancelada'); },
-      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo cancelar la reserva')
+      next: () => { this.refreshBookings(); this.notifications.success('Reserva cancelada'); this.actionBookingId = undefined; },
+      error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo cancelar la reserva'); this.actionBookingId = undefined; }
     });
   }
 
   createSchedule() {
     if (!this.newDay || !this.newStart || !this.newEnd) return;
+    this.isCreatingSchedule = true;
     this.barber.createSchedule({ dayOfWeek: this.newDay, startTime: this.newStart, endTime: this.newEnd }).subscribe({
       next: (created) => {
         this.schedules = [...(this.schedules || []), created];
         this.notifications.success('Horario creado');
+        this.isCreatingSchedule = false;
       },
-      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo crear el horario')
+      error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo crear el horario'); this.isCreatingSchedule = false; }
     });
   }
 
   updateSchedule(s: Schedule) {
     if (!s.id) return;
+    this.updatingScheduleId = s.id;
     this.barber.updateSchedule(s.id, { dayOfWeek: s.dayOfWeek, startTime: s.startTime, endTime: s.endTime }).subscribe({
       next: (updated) => {
         this.schedules = (this.schedules || []).map(x => x.id === updated.id ? updated : x);
         this.notifications.success('Horario actualizado');
+        this.updatingScheduleId = undefined;
       },
-      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo actualizar el horario')
+      error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo actualizar el horario'); this.updatingScheduleId = undefined; }
     });
   }
 
@@ -269,12 +305,14 @@ export class BarberDashboardComponent implements OnInit {
     if (!s.id) return;
     const ok = await this.confirm.confirm({ message: '¿Eliminar este horario?', confirmText: 'Sí, eliminar', cancelText: 'No' });
     if (!ok) return;
+    this.deletingScheduleId = s.id;
     this.barber.deleteSchedule(s.id).subscribe({
       next: () => {
         this.schedules = (this.schedules || []).filter(x => x.id !== s.id);
         this.notifications.success('Horario eliminado');
+        this.deletingScheduleId = undefined;
       },
-      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo eliminar el horario')
+      error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo eliminar el horario'); this.deletingScheduleId = undefined; }
     });
   }
 
@@ -297,9 +335,10 @@ export class BarberDashboardComponent implements OnInit {
     if (!b.id) return;
     const ok = await this.confirm.confirm({ message: '¿Marcar esta reserva como completada?', confirmText: 'Sí, completar', cancelText: 'No' });
     if (!ok) return;
+    this.actionBookingId = b.id;
     this.barber.completeBooking(b.id).subscribe({
-      next: () => { this.refreshBookings(); this.notifications.success('Reserva marcada como completada'); },
-      error: (err) => this.notifications.error(err?.error?.error || 'No se pudo completar la reserva')
+      next: () => { this.refreshBookings(); this.notifications.success('Reserva marcada como completada'); this.actionBookingId = undefined; },
+      error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo completar la reserva'); this.actionBookingId = undefined; }
     });
   }
   // NUEVO: lista filtrada según el filtro actual

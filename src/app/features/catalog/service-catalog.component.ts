@@ -16,25 +16,30 @@ import { realDurationMinutes } from '../../core/duration-realism';
       <div class="relative max-w-6xl mx-auto py-12 px-4">
         <h1 class="barber-title text-4xl sm:text-5xl font-extrabold tracking-tight mb-2">Servicios de barbería</h1>
         <p class="text-gray-600 mb-8">Explora nuestros servicios y reserva en segundos.</p>
+        <ng-container *ngIf="!loading; else loadingTpl">
+          <div *ngIf="services.length; else empty" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <a class="group bg-white border rounded-2xl shadow-sm p-6 flex flex-col items-center justify-center text-center hover:shadow-md transition"
+               routerLink="/reservas/nueva" *ngFor="let s of services">
+              <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 border" [ngClass]="iconColorFor(s.name)">
+                <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <!-- Marco/emblema del color del servicio -->
+                  <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-opacity="0.25" stroke-width="1" fill="none"></circle>
+                  <!-- Icono del servicio, limpio y centrado -->
+                  <path [attr.d]="iconFor(s.name)" stroke="currentColor" [attr.stroke-width]="strokeFor(s.name)" fill="none"></path>
+                </svg>
+              </div>
+              <div class="font-semibold text-gray-900">{{ s.name }}</div>
+              <div class="text-sm text-gray-500 mt-1">Duración estimada {{ realDuration(s) }} min · {{ formatPrice(s.priceCents) }}</div>
+            </a>
+          </div>
 
-        <div *ngIf="services.length; else empty" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <a class="group bg-white border rounded-2xl shadow-sm p-6 flex flex-col items-center justify-center text-center hover:shadow-md transition"
-             routerLink="/reservas/nueva" *ngFor="let s of services">
-            <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 border" [ngClass]="iconColorFor(s.name)">
-              <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <!-- Marco/emblema del color del servicio -->
-                <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-opacity="0.25" stroke-width="1" fill="none"></circle>
-                <!-- Icono del servicio, limpio y centrado -->
-                <path [attr.d]="iconFor(s.name)" stroke="currentColor" [attr.stroke-width]="strokeFor(s.name)" fill="none"></path>
-              </svg>
-            </div>
-            <div class="font-semibold text-gray-900">{{ s.name }}</div>
-            <div class="text-sm text-gray-500 mt-1">Duración estimada {{ realDuration(s) }} min · {{ formatPrice(s.priceCents) }}</div>
-          </a>
-        </div>
+          <ng-template #empty>
+            <div class="bg-white border rounded p-6 text-center text-gray-600">Aún no hay servicios disponibles.</div>
+          </ng-template>
+        </ng-container>
 
-        <ng-template #empty>
-          <div class="bg-white border rounded p-6 text-center text-gray-600">Aún no hay servicios disponibles.</div>
+        <ng-template #loadingTpl>
+          <div class="text-sm text-gray-500">Cargando catálogo…</div>
         </ng-template>
 
         <div class="text-center text-xs text-gray-500 mt-8">FreshCut</div>
@@ -44,13 +49,15 @@ import { realDurationMinutes } from '../../core/duration-realism';
 })
 export class ServiceCatalogComponent implements OnInit {
   services: ServiceItem[] = [];
+  loading = true;
   constructor(private catalog: CatalogService, private currency: CurrencyService) {}
 
   ngOnInit(): void {
     this.currency.warmup();
+    this.loading = true;
     this.catalog.listServices().subscribe({
-      next: (data) => this.services = data.filter(s => s.active),
-      error: () => {}
+      next: (data) => { this.services = data.filter(s => s.active); this.loading = false; },
+      error: () => { this.loading = false; }
     });
   }
 
