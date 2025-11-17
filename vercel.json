@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/frontend",
+  "routes": [
+    { "src": "/api/(.*)", "dest": "https://freshcut-back.onrender.com/api/$1" },
+    { "src": "/((?!.*\\.).*)", "dest": "/index.html" }
+  ]
+}
