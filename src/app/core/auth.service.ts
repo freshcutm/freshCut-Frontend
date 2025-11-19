@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { API_BASE_URL } from './api.config';
+import { NavigationControlService } from './navigation-control.service';
 
 interface AuthResponse { token: string; email: string; role: 'USER' | 'ADMIN' | 'BARBER'; }
 
@@ -17,7 +18,7 @@ export class AuthService {
   role = computed(() => this._role());
   email = computed(() => this._email());
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private navCtrl: NavigationControlService) {}
 
   async login(email: string, password: string) {
     const payload = { email: (email || '').trim(), password };
@@ -27,6 +28,7 @@ export class AuthService {
       throw { error: { message: 'Credenciales inválidas' } };
     }
     this.setSession(res);
+    this.navCtrl.activateSessionLock();
     return res;
   }
 
@@ -57,7 +59,8 @@ export class AuthService {
       localStorage.removeItem('auth_email');
       localStorage.removeItem('auth_role');
     }
-    this.router.navigateByUrl('/auth/login');
+    this.navCtrl.deactivateSessionLockAndCleanup();
+    this.router.navigateByUrl('/auth/login', { replaceUrl: true });
   }
 
   async requestPasswordReset(email: string) {

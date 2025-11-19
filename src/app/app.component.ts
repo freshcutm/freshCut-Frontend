@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from './core/auth.service';
 import { ToastContainerComponent } from './ui/toast-container.component';
 import { ConfirmDialogComponent } from './ui/confirm-dialog.component';
+import { NavigationControlService } from './core/navigation-control.service';
 
 @Component({
   selector: 'app-root',
@@ -16,11 +17,12 @@ export class AppComponent implements OnInit {
   title = 'frontend';
   isLoginRoute = false;
   isRegisterRoute = false;
-  constructor(public auth: AuthService, private router: Router) {}
+  constructor(public auth: AuthService, private router: Router, private navCtrl: NavigationControlService) {}
   ngOnInit(): void {
     if (this.auth.isLoggedIn()) {
       this.auth.me();
     }
+    this.navCtrl.init();
     this.updateRouteFlags(this.router.url);
     this.router.events.subscribe(e => {
       if (e instanceof NavigationEnd) this.updateRouteFlags(e.urlAfterRedirects);
