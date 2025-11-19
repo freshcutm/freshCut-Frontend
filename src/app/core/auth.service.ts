@@ -20,8 +20,22 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router, private navCtrl: NavigationControlService) {}
 
+  private async sha256Hex(text: string): Promise<string> {
+    const enc = new TextEncoder();
+    const data = enc.encode(text);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    const bytes = new Uint8Array(digest);
+    let hex = '';
+    for (let i = 0; i < bytes.length; i++) {
+      hex += bytes[i].toString(16).padStart(2, '0');
+    }
+    return hex;
+  }
+
   async login(email: string, password: string) {
-    const payload = { email: (email || '').trim(), password };
+    // No enviar la contraseña en texto plano: aplicar SHA-256 en cliente
+    const hash = await this.sha256Hex(password || '');
+    const payload = { email: (email || '').trim(), password: hash };
     const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/login`, payload));
     // Evitar guardar sesión si el backend respondió éxito lógico pero sin token
     if (!res?.token || !res.token.trim()) {
@@ -33,7 +47,9 @@ export class AuthService {
   }
 
   async register(name: string, email: string, password: string, role?: 'USER' | 'ADMIN' | 'BARBER', barberId?: string) {
-    const payload: any = { name: (name || '').trim(), email: (email || '').trim(), password };
+    // No enviar la contraseña en texto plano: aplicar SHA-256 en cliente
+    const hash = await this.sha256Hex(password || '');
+    const payload: any = { name: (name || '').trim(), email: (email || '').trim(), password: hash };
     if (role) payload.role = role;
     if (role === 'BARBER' && barberId) payload.barberId = barberId;
     const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/register`, payload));
@@ -72,7 +88,9 @@ export class AuthService {
   }
 
   async resetPassword(email: string, code: string, newPassword: string) {
-    await firstValueFrom(this.http.post(`${this.baseUrl}/reset`, { email: (email || '').trim(), code: (code || '').trim(), newPassword }));
+    // También evitar texto plano en reset: enviar SHA-256
+    const hash = await this.sha256Hex(newPassword || '');
+    await firstValueFrom(this.http.post(`${this.baseUrl}/reset`, { email: (email || '').trim(), code: (code || '').trim(), newPassword: hash }));
     return true;
   }
 
@@ -90,5 +108,5 @@ export class AuthService {
 
   getToken() { return this._token(); }
 
-  // Contraseñas se envían en texto plano al backend, que las cifra (BCrypt).
+  // Las contraseñas ya no se envían en texto plano: se envía SHA-256.
 }

@@ -83,7 +83,9 @@ export class LoginComponent {
       else if (res.role === 'USER') this.router.navigateByUrl('/cliente', { replaceUrl: true });
       else this.router.navigateByUrl('/reservas', { replaceUrl: true });
     } catch (e: any) {
-      this.notifications.error(e?.error?.message || 'No se pudo iniciar sesión');
+      // Mensaje más claro y guía: si tu cuenta es antigua, recupera la contraseña para migrar al esquema seguro
+      const msg = e?.error?.message || 'No se pudo iniciar sesión. Si tu cuenta fue creada antes, usa “Olvidé mi contraseña” para actualizarla y mejorar seguridad.';
+      this.notifications.error(msg);
     }
     finally {
       // Limpiar estado de carga
