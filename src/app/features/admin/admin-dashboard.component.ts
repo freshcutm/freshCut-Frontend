@@ -34,7 +34,7 @@ import { RouterLink } from '@angular/router';
           </div>
         </div>
       </div>
-    </dv>
+    </div>
   `
 })
 export class AdminDashboardComponent {}
