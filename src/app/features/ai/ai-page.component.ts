@@ -2,6 +2,8 @@ import { Component, ElementRef, ViewChild, OnDestroy, OnInit } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiService, PhotoRecommendationResponse } from '../../core/ai.service';
+import { RecommendationHistoryService } from '../../core/recommendation-history.service';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -160,7 +162,7 @@ export class AiPageComponent implements OnInit, OnDestroy {
   @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('snapshotCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
-  constructor(private ai: AiService) {}
+  constructor(private ai: AiService, private history: RecommendationHistoryService, private router: Router) {}
 
   private isRelevantText(text: string | null | undefined): boolean {
     const t = (text || '').toLowerCase();
@@ -432,6 +434,11 @@ export class AiPageComponent implements OnInit, OnDestroy {
   }
 
   generateRecommendations() {
+    const q = (this.notes || '').toLowerCase().trim();
+    if (q === 'muestra mi historial' || q === '¿qué cortes me has recomendado?' || q === 'historial de recomendaciones') {
+      this.router.navigateByUrl('/historial');
+      return;
+    }
     const hasPhoto = !!this.imgFile;
     const hasText = this.isRelevantText(this.notes) || !!(this.notes && this.notes.trim());
     if (!hasPhoto && !hasText) {
@@ -479,6 +486,7 @@ export class AiPageComponent implements OnInit, OnDestroy {
         }
         this.recommendations = reply;
         this.parseRecommendations(this.recommendations);
+        this.logRecommendations();
       }).catch(async (e: any) => {
         let msg = 'No se pudo generar recomendaciones.';
         try {
@@ -506,6 +514,7 @@ export class AiPageComponent implements OnInit, OnDestroy {
       firstValueFrom(this.ai.chat({ messages: [{ role: 'user', content: prompt }] })).then(res => {
         this.recommendations = res.reply || '';
         this.parseRecommendations(this.recommendations);
+        this.logRecommendations();
       }).catch(async (e: any) => {
         let msg = 'No se pudo generar recomendaciones.';
         try {
@@ -591,6 +600,27 @@ export class AiPageComponent implements OnInit, OnDestroy {
     // Si no se detectaron opciones, usa todo el texto como una única opción
     if (this.optionsList.length === 0 && reply) {
       this.optionsList = [reply];
+    }
+    const filtered: string[] = [];
+    for (const opt of this.optionsList) {
+      const name = (opt || '').trim();
+      if (!name) continue;
+      const exists = this.history.exists(name);
+      const hasNewNotes = !!(this.notes && this.notes.trim());
+      if (exists && !hasNewNotes) continue;
+      filtered.push(opt);
+    }
+    this.optionsList = filtered.length ? filtered : this.optionsList;
+  }
+
+  private logRecommendations() {
+    const baseFeatures = (this.notes && this.notes.trim()) ? this.notes.trim() : (this.imgFile ? 'Basado en foto del rostro' : 'Preferencias generales');
+    for (const opt of this.optionsList) {
+      const name = (opt || '').trim();
+      if (!name) continue;
+      const exists = this.history.exists(name);
+      const reason = exists ? 'Actualización de contexto (nuevas notas)' : 'Primera recomendación detectada';
+      this.history.add({ cutName: name, features: baseFeatures, reason });
     }
   }
 

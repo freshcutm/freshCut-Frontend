@@ -23,6 +23,7 @@ export const routes: Routes = [
   { path: 'admin/barberos', canActivate: [adminGuard], loadComponent: () => import('./features/admin/barber-list.component').then(c => c.BarberListComponent) },
   { path: 'admin/barberos/nuevo', canActivate: [adminGuard], loadComponent: () => import('./features/admin/barber-form.component').then(c => c.BarberFormComponent) },
   { path: 'admin/barberos/editar/:id', canActivate: [adminGuard], loadComponent: () => import('./features/admin/barber-edit.component').then(c => c.BarberEditComponent) },
+  { path: 'historial', canActivate: [authGuard], loadComponent: () => import('./features/history/recommendation-history.component').then(c => c.RecommendationHistoryComponent) },
   { path: 'barbero', canActivate: [barberGuard], loadComponent: () => import('./features/barber/barber-dashboard.component').then(c => c.BarberDashboardComponent) },
   { path: 'perfil', canActivate: [authGuard], loadComponent: () => import('./features/profile/profile.component').then(c => c.ProfileComponent) },
   { path: '**', redirectTo: 'home' }
