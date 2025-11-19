@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, of, from } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { API_AI_URL } from './api.config';
 import { LRUCache } from './datastructures/lru-cache';
 import { RequestQueue } from './datastructures/request-queue';
@@ -19,6 +19,11 @@ export interface ChatRequest {
 
 export interface ChatResponse { reply: string; }
 
+export interface PhotoRecommendationResponse {
+  reply: string;
+  rejectReason?: string; // 'irrelevant_text' | 'no_face_detected' | undefined
+}
+
 @Injectable({ providedIn: 'root' })
 export class AiService {
   // URL del módulo de IA, configurable por runtime
@@ -27,6 +32,8 @@ export class AiService {
   private cache = new LRUCache<string, ChatResponse>(50);
   // Cola FIFO para serializar peticiones a IA (evita ráfagas)
   private queue = new RequestQueue();
+  // Caché separado para recomendaciones desde foto (incluye encabezados)
+  private photoCache = new LRUCache<string, PhotoRecommendationResponse>(50);
   constructor(private http: HttpClient) {}
 
   chat(req: ChatRequest): Observable<ChatResponse> {
@@ -56,16 +63,22 @@ export class AiService {
   recommendFromPhoto(
     file: File,
     faceDescription?: string
-  ): Observable<ChatResponse> {
+  ): Observable<PhotoRecommendationResponse> {
     const form = new FormData();
     form.append('file', file);
     if (faceDescription) form.append('faceDescription', faceDescription);
     const key = this.cacheKeyForPhoto(file, faceDescription);
-    const cached = this.cache.get(key);
+    const cached = this.photoCache.get(key);
     if (cached) return of(cached);
-    const obs = this.http.post<ChatResponse>(`${this.baseUrl}/recommend-from-photo`, form);
+    const obs = this.http.post<ChatResponse>(`${this.baseUrl}/recommend-from-photo`, form, { observe: 'response' });
     return from(this.queue.enqueue(() => firstValueFrom(obs))).pipe(
-      tap(res => this.cache.set(key, res))
+      map((res: HttpResponse<ChatResponse>) => {
+        const body = res.body || { reply: '' };
+        const rejectReason = res.headers.get('X-Reject-Reason') || undefined;
+        const normalized: PhotoRecommendationResponse = { reply: body.reply || '', rejectReason: rejectReason || undefined };
+        this.photoCache.set(key, normalized);
+        return normalized;
+      })
     );
   }
 

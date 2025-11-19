@@ -1,7 +1,7 @@
 import { Component, ElementRef, ViewChild, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AiService } from '../../core/ai.service';
+import { AiService, PhotoRecommendationResponse } from '../../core/ai.service';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -442,16 +442,40 @@ export class AiPageComponent implements OnInit, OnDestroy {
     this.recommendations = null;
     this.textErrorMsg = '';
     if (hasPhoto) {
-      firstValueFrom(this.ai.recommendFromPhoto(this.imgFile!, this.notes || undefined)).then(res => {
+      firstValueFrom(this.ai.recommendFromPhoto(this.imgFile!, this.notes || undefined)).then((res: PhotoRecommendationResponse) => {
         const reply = (res.reply || '').trim();
-        const isIrrelevant = reply.includes('Puedo ayudarte solo con recomendaciones de cortes, estilos, barba o facciones');
-        if (isIrrelevant) {
+        const reject = res.rejectReason;
+        if (reject) {
+          // Imagen sin rostro o texto fuera de dominio -> mensaje específico
           this.textErrorMsg = 'No se pudo realizar recomendaciones ya que se compartió una imagen que no tiene que ver con el propósito de la web. Por favor vuelve a intentarlo con otra imagen.';
           this.recommendations = null;
           this.optionsList = [];
           this.maintenanceText = '';
           this.avoidText = '';
           return;
+        }
+        // Si el backend devolvió el mensaje estándar pero no marcó rechazo,
+        // interpretamos como servicio no disponible y hacemos fallback a chat (solo notas).
+        if (reply.includes('Puedo ayudarte solo con recomendaciones de cortes, estilos, barba o facciones')) {
+          if (this.notes && this.notes.trim()) {
+            const prompt = `Quiero recomendaciones de cortes y estilos basadas en esta descripción: ${this.notes}. Responde breve con opciones numeradas y consejos de mantenimiento y cosas a evitar.`;
+            firstValueFrom(this.ai.chat({ messages: [{ role: 'user', content: prompt }] })).then(r2 => {
+              this.recommendations = (r2.reply || '').trim();
+              this.parseRecommendations(this.recommendations!);
+            }).catch(() => {
+              this.textErrorMsg = 'El servicio de IA no está disponible en este momento. Intenta nuevamente más tarde.';
+            }).finally(() => {
+              this.textLoading = false;
+            });
+            return;
+          } else {
+            this.textErrorMsg = 'El servicio de IA no está disponible en este momento. Agrega notas o intenta nuevamente más tarde.';
+            this.recommendations = null;
+            this.optionsList = [];
+            this.maintenanceText = '';
+            this.avoidText = '';
+            return;
+          }
         }
         this.recommendations = reply;
         this.parseRecommendations(this.recommendations);
