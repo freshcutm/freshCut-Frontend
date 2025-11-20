@@ -24,7 +24,8 @@ import { NotificationsService } from '../../ui/notifications.service';
       <form (ngSubmit)="save()" class="space-y-4">
         <div>
           <label class="block text-sm font-medium">Nombre</label>
-          <input [(ngModel)]="name" name="name" class="w-full border rounded px-3 py-2" placeholder="Tu nombre" />
+          <input [(ngModel)]="name" name="name" class="w-full border rounded px-3 py-2" placeholder="Tu nombre" maxlength="50" />
+          <div class="text-xs text-gray-500 mt-1">{{ (name || '').length }}/50</div>
         </div>
 
         <div>
