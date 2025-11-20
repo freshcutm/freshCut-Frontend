@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RecommendationHistoryService, RecommendationEntry } from '../../core/recommendation-history.service';
 import { AiService, ChatLog } from '../../core/ai.service';
 
 @Component({
@@ -9,17 +8,6 @@ import { AiService, ChatLog } from '../../core/ai.service';
   imports: [CommonModule],
   template: `
     <div class="max-w-3xl mx-auto p-6 bg-white shadow-sm border rounded">
-      <h2 class="text-2xl font-semibold mb-4">Historial de cortes recomendados</h2>
-      <div *ngIf="entries.length === 0" class="text-gray-600">Aún no hay recomendaciones registradas.</div>
-      <ul class="space-y-3" *ngIf="entries.length > 0">
-        <li *ngFor="let e of entries" class="border rounded p-3">
-          <div class="text-sm text-gray-500">{{ formatDate(e.timestamp) }}</div>
-          <div class="font-medium">{{ e.cutName }}</div>
-          <div class="text-sm text-gray-700">Características: {{ e.features }}</div>
-          <div class="text-sm text-gray-700">Razón: {{ e.reason }}</div>
-        </li>
-      </ul>
-
       <h2 class="text-2xl font-semibold mt-8 mb-4">Historial de chats guardados</h2>
       <div *ngIf="savedChats.length === 0" class="text-gray-600">Aún no hay chats guardados.</div>
       <ul class="space-y-3" *ngIf="savedChats.length > 0">
@@ -34,11 +22,9 @@ import { AiService, ChatLog } from '../../core/ai.service';
   `
 })
 export class RecommendationHistoryComponent implements OnInit {
-  entries: RecommendationEntry[] = [];
   savedChats: ChatLog[] = [];
-  constructor(private history: RecommendationHistoryService, private ai: AiService) {}
+  constructor(private ai: AiService) {}
   ngOnInit(): void {
-    this.entries = this.history.list();
     this.ai.getSavedHistory().subscribe({
       next: (list) => { this.savedChats = list || []; },
       error: () => { this.savedChats = []; }
