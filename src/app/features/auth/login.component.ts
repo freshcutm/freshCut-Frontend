@@ -43,6 +43,9 @@ import { NotificationsService } from '../../ui/notifications.service';
           <span>Iniciando sesión...</span>
         </div>
       </form>
+      <div class="text-sm text-gray-600 mt-4">
+        <a routerLink="/auth/reset" class="text-indigo-600 hover:underline">¿Olvidaste tu contraseña?</a>
+      </div>
     </div>
   `
 })
