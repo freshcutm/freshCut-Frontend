@@ -47,6 +47,29 @@ import { NotificationsService } from '../../ui/notifications.service';
         <a routerLink="/auth/reset" class="text-indigo-600 hover:underline">¿Olvidaste tu contraseña?</a>
       </div>
     </div>
+
+    <!-- Modal de migración: si el login falla, ofrecer cambio de contraseña seguro -->
+    <div *ngIf="showMigrationDialog" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-md w-full max-w-md p-6">
+        <h3 class="text-lg font-semibold mb-3">Actualizar contraseña para mayor seguridad</h3>
+        <p class="text-sm text-gray-600 mb-4">Tu cuenta necesita actualizar la contraseña para iniciar sesión sin enviar texto plano. No se enviará tu contraseña en el payload.</p>
+        <form (ngSubmit)="migratePassword()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Nueva contraseña</label>
+            <input [(ngModel)]="newPassword" name="newPassword" type="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Confirmar contraseña</label>
+            <input [(ngModel)]="confirmPassword" name="confirmPassword" type="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+          </div>
+          <div class="text-xs text-gray-500">Debe tener al menos 8 caracteres, incluir mayúscula, minúscula, número y símbolo.</div>
+          <div class="flex items-center gap-3 mt-2">
+            <button class="btn btn-primary" type="submit" [disabled]="isMigrating">{{ isMigrating ? 'Actualizando...' : 'Actualizar y entrar' }}</button>
+            <button type="button" class="btn btn-secondary" (click)="cancelMigration()" [disabled]="isMigrating">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
   `
 })
 export class LoginComponent {
@@ -56,6 +79,11 @@ export class LoginComponent {
   isSubmitting = false;
   showSpinner = false;
   private loadingTimeout: any;
+  // Estado de migración
+  showMigrationDialog = false;
+  newPassword = '';
+  confirmPassword = '';
+  isMigrating = false;
 
   constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
 
@@ -86,9 +114,14 @@ export class LoginComponent {
       else if (res.role === 'USER') this.router.navigateByUrl('/cliente', { replaceUrl: true });
       else this.router.navigateByUrl('/reservas', { replaceUrl: true });
     } catch (e: any) {
-      // Mensaje más claro y guía: si tu cuenta es antigua, recupera la contraseña para migrar al esquema seguro
-      const msg = e?.error?.message || 'No se pudo iniciar sesión. Si tu cuenta fue creada antes, usa “Olvidé mi contraseña” para actualizarla y mejorar seguridad.';
-      this.notifications.error(msg);
+      // Si las credenciales son inválidas, ofrecer migración inmediata
+      const msg = e?.error?.message || '';
+      if ((msg || '').toLowerCase().includes('credenciales inválidas')) {
+        this.showMigrationDialog = true;
+      } else {
+        const fallback = 'No se pudo iniciar sesión. Si tu cuenta fue creada antes, usa “Olvidé mi contraseña” para actualizarla y mejorar seguridad.';
+        this.notifications.error(msg || fallback);
+      }
     }
     finally {
       // Limpiar estado de carga
@@ -103,5 +136,43 @@ export class LoginComponent {
 
   togglePassword() {
     this.showPassword = !this.showPassword;
+  }
+
+  async migratePassword() {
+    try {
+      const email = (this.email || '').trim().toLowerCase();
+      const pw = this.newPassword || '';
+      const confirm = this.confirmPassword || '';
+      if (!pw || pw !== confirm) {
+        this.notifications.error('Las contraseñas no coinciden');
+        return;
+      }
+      // Reglas de fuerza
+      const strong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pw);
+      if (!strong) {
+        this.notifications.error('Contraseña inválida: mínimo 8, mayúscula, minúscula, número y símbolo');
+        return;
+      }
+      this.isMigrating = true;
+      await this.auth.resetPasswordSimple(email, pw);
+      // Intentar login de nuevo sin enviar texto plano (solo hash)
+      const res = await this.auth.login(email, pw);
+      this.showMigrationDialog = false;
+      if (res.role === 'BARBER') this.router.navigateByUrl('/barbero', { replaceUrl: true });
+      else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin', { replaceUrl: true });
+      else if (res.role === 'USER') this.router.navigateByUrl('/cliente', { replaceUrl: true });
+      else this.router.navigateByUrl('/reservas', { replaceUrl: true });
+    } catch (e: any) {
+      const msg = e?.error?.message || 'No fue posible actualizar la contraseña. Intenta nuevamente o usa “Olvidé mi contraseña”.';
+      this.notifications.error(msg);
+    } finally {
+      this.isMigrating = false;
+    }
+  }
+
+  cancelMigration() {
+    this.showMigrationDialog = false;
+    this.newPassword = '';
+    this.confirmPassword = '';
   }
 }
