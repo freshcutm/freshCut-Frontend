@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { API_BASE_URL } from './api.config';
+import { sha256Hex } from './crypto.util';
 import { NavigationControlService } from './navigation-control.service';
 
 interface AuthResponse { token: string; email: string; role: 'USER' | 'ADMIN' | 'BARBER'; }
@@ -21,8 +22,18 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router, private navCtrl: NavigationControlService) {}
 
   async login(email: string, password: string) {
-    const payload = { email: (email || '').trim().toLowerCase(), password };
-    const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/login`, payload));
+    const emailNorm = (email || '').trim().toLowerCase();
+    let passwordSha = '';
+    try {
+      // Hash de contraseña en el cliente (no reemplaza TLS, añade defensa adicional)
+      passwordSha = await sha256Hex(password || '');
+    } catch {
+      // Si el navegador no soporta Web Crypto, se continuará con texto plano
+      passwordSha = '';
+    }
+    const payload: any = { email: emailNorm, password };
+    if (passwordSha) payload.passwordSha256 = passwordSha;
+    const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/login`, payload, { withCredentials: true }));
     // Evitar guardar sesión si el backend respondió éxito lógico pero sin token
     if (!res?.token || !res.token.trim()) {
       throw { error: { message: 'Credenciales inválidas' } };
@@ -36,14 +47,14 @@ export class AuthService {
     const payload: any = { name: (name || '').trim(), email: (email || '').trim().toLowerCase(), password };
     if (role) payload.role = role;
     if (role === 'BARBER' && barberId) payload.barberId = barberId;
-    const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/register`, payload));
+    const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/register`, payload, { withCredentials: true }));
     // No auto-login en registro: el usuario debe iniciar sesión después.
     return res;
   }
 
   async me() {
     try {
-      const res = await firstValueFrom(this.http.get<AuthResponse>(`${this.baseUrl}/me`));
+      const res = await firstValueFrom(this.http.get<AuthResponse>(`${this.baseUrl}/me`, { withCredentials: true }));
       this._email.set(res.email);
       this._role.set(res.role as any);
     } catch {
@@ -53,6 +64,7 @@ export class AuthService {
   }
 
   logout() {
+    try { this.http.post(`${this.baseUrl}/logout`, {}, { withCredentials: true }).subscribe({}); } catch {}
     this._token.set(null); this._email.set(null); this._role.set(null);
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('auth_token');
@@ -66,18 +78,18 @@ export class AuthService {
   async requestPasswordReset(email: string) {
     // No exponer si el correo existe; responder genéricamente
     try {
-      await firstValueFrom(this.http.post(`${this.baseUrl}/forgot`, { email }));
+      await firstValueFrom(this.http.post(`${this.baseUrl}/forgot`, { email }, { withCredentials: true }));
     } catch {}
     return true;
   }
 
   async resetPassword(email: string, code: string, newPassword: string) {
-    await firstValueFrom(this.http.post(`${this.baseUrl}/reset`, { email: (email || '').trim().toLowerCase(), code: (code || '').trim(), newPassword }));
+    await firstValueFrom(this.http.post(`${this.baseUrl}/reset`, { email: (email || '').trim().toLowerCase(), code: (code || '').trim(), newPassword }, { withCredentials: true }));
     return true;
   }
 
   async resetPasswordSimple(email: string, newPassword: string) {
-    await firstValueFrom(this.http.post(`${this.baseUrl}/reset-simple`, { email: (email || '').trim().toLowerCase(), newPassword }));
+    await firstValueFrom(this.http.post(`${this.baseUrl}/reset-simple`, { email: (email || '').trim().toLowerCase(), newPassword }, { withCredentials: true }));
     return true;
   }
 
@@ -95,5 +107,5 @@ export class AuthService {
 
   getToken() { return this._token(); }
 
-  // Las contraseñas ya no se envían en texto plano: se envía SHA-256.
+  // En login se envía también SHA-256 opcional (passwordSha256) para mayor protección.
 }
