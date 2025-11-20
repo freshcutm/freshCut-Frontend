@@ -25,15 +25,16 @@ export class AuthService {
     const emailNorm = (email || '').trim().toLowerCase();
     let passwordSha = '';
     try {
-      // Hash de contraseña en el cliente; no enviar texto plano en la solicitud
+      // Hash de contraseña en el cliente (defensa adicional)
       passwordSha = await sha256Hex(password || '');
     } catch {
-      // Si el navegador no soporta Web Crypto, no enviar la contraseña
-      // y avisar claramente al usuario para proteger su privacidad
-      throw { error: { message: 'Tu navegador no soporta cifrado local. No enviaremos tu contraseña en texto plano. Actualiza el navegador para iniciar sesión de forma segura.' } };
+      // Si el navegador no soporta Web Crypto, continuar sin hash
+      passwordSha = '';
     }
-    // Enviar únicamente el hash, nunca el campo "password" en el payload
-    const payload: any = { email: emailNorm, passwordSha256: passwordSha };
+    // Para compatibilidad con cuentas existentes, enviamos también el password en texto
+    // (viaja por HTTPS y el backend valida con BCrypt). El hash se envía para cuentas antiguas.
+    const payload: any = { email: emailNorm, password };
+    if (passwordSha) payload.passwordSha256 = passwordSha;
     const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/login`, payload, { withCredentials: true }));
     // Evitar guardar sesión si el backend respondió éxito lógico pero sin token
     if (!res?.token || !res.token.trim()) {
