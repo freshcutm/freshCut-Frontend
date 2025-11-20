@@ -123,6 +123,10 @@ import { firstValueFrom } from 'rxjs';
             </div>
             <p class="text-sm text-gray-100">{{ avoidText }}</p>
           </div>
+          <div class="flex items-center gap-2 mt-3">
+            <button type="button" (click)="doSaveChat()" class="btn btn-outline">Guardar chat</button>
+            <span *ngIf="saveMsg" class="text-xs text-green-400">{{ saveMsg }}</span>
+          </div>
         </div>
       </div>
 
@@ -152,6 +156,7 @@ export class AiPageComponent implements OnInit, OnDestroy {
   avoidText: string = '';
   textLoading = false;
   textErrorMsg = '';
+  saveMsg = '';
   cameraOn = false;
   // Nuevo: preferencias de estilo y fuerza del cambio
   styleChoice: string | null = ''; // Auto por defecto
@@ -648,6 +653,22 @@ export class AiPageComponent implements OnInit, OnDestroy {
       const exists = this.history.exists(name);
       const reason = exists ? 'Actualización de contexto (nuevas notas)' : 'Primera recomendación detectada';
       this.history.add({ cutName: name, features: baseFeatures, reason });
+    }
+  }
+
+  async doSaveChat() {
+    try {
+      const res = await firstValueFrom(this.ai.saveLatestChat());
+      if (res && res.id) {
+        this.saveMsg = 'Chat guardado en historial.';
+        setTimeout(() => { this.saveMsg = ''; }, 3000);
+      } else {
+        this.saveMsg = 'No se pudo guardar el chat.';
+        setTimeout(() => { this.saveMsg = ''; }, 3000);
+      }
+    } catch (e) {
+      this.saveMsg = 'No se pudo guardar el chat.';
+      setTimeout(() => { this.saveMsg = ''; }, 3000);
     }
   }
 

@@ -46,6 +46,17 @@ export class AiService {
     );
   }
 
+  // Marca como guardado el último chat del usuario autenticado
+  saveLatestChat(): Observable<{ id: string }> {
+    return this.http.post<{ id: string }>(`${this.baseUrl}/save-latest`, {});
+  }
+
+  // Obtiene historial de chats guardados del usuario autenticado
+  getSavedHistory(): Observable<ChatLog[]> {
+    return this.http.get<ChatLog[]>(`${this.baseUrl}/history`);
+  }
+
+
   editHair(
     file: File,
     faceDescription?: string,
@@ -93,4 +104,16 @@ export class AiService {
     const face = (faceDescription || '').trim().toLowerCase();
     return `photo:${meta}:${face}`;
   }
+}
+
+// Tipo de historial para renderizar chats guardados
+export interface ChatLog {
+  id: string;
+  email?: string;
+  messages: { role: string; content: string }[];
+  faceDescription?: string;
+  reply: string;
+  rejectReason?: string;
+  createdAt: string;
+  saved?: boolean;
 }
