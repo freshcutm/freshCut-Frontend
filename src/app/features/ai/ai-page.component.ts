@@ -62,14 +62,14 @@ import { firstValueFrom } from 'rxjs';
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1 text-gray-300">Notas (opcional)</label>
-          <textarea [(ngModel)]="notes" name="notes" rows="6" class="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: frente amplia, pómulos marcados, evitar peinados muy altos"></textarea>
+          <label class="block text-sm font-medium mb-1 text-gray-300">Notas (obligatorio)</label>
+          <textarea [(ngModel)]="notes" name="notes" rows="6" required [attr.aria-required]="true" class="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: frente amplia, pómulos marcados, evitar peinados muy altos"></textarea>
           <div class="mt-2 flex items-center gap-2">
             <input id="autoMode" type="checkbox" [(ngModel)]="autoMode" name="autoMode" class="accent-indigo-500" />
             <label for="autoMode" class="text-sm text-gray-300">Generar recomendaciones automáticamente</label>
           </div>
           <div class="flex flex-wrap gap-2 mt-3">
-            <button (click)="generateRecommendations()" [disabled]="textLoading" class="btn btn-outline w-full sm:w-auto">
+            <button (click)="generateRecommendations()" [disabled]="textLoading || !(notes && notes.trim())" class="btn btn-outline w-full sm:w-auto">
               {{ textLoading ? 'Generando...' : 'Generar recomendaciones con IA' }}
             </button>
             <button (click)="clearImage()" class="btn btn-muted w-full sm:w-auto">Limpiar</button>
@@ -435,14 +435,21 @@ export class AiPageComponent implements OnInit, OnDestroy {
 
   generateRecommendations() {
     const q = (this.notes || '').toLowerCase().trim();
+    // Notas obligatorias para Grok: siempre requerimos descripción de rasgos
+    const notesOk = !!q;
+    if (!notesOk) {
+      this.textErrorMsg = 'Las notas son obligatorias: describe tus rasgos faciales o preferencias.';
+      return;
+    }
     if (q === 'muestra mi historial' || q === '¿qué cortes me has recomendado?' || q === 'historial de recomendaciones') {
       this.router.navigateByUrl('/historial');
       return;
     }
     const hasPhoto = !!this.imgFile;
-    const hasText = this.isRelevantText(this.notes) || !!(this.notes && this.notes.trim());
-    if (!hasPhoto && !hasText) {
-      this.textErrorMsg = 'Escribe notas breves sobre tu rostro o estilos, o sube una foto.';
+    const hasText = !!(this.notes && this.notes.trim());
+    // Dado que las notas son obligatorias, no continuamos si no hay texto
+    if (!hasText) {
+      this.textErrorMsg = 'Las notas son obligatorias para generar recomendaciones con IA.';
       return;
     }
     this.textLoading = true;
