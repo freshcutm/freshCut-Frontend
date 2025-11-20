@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiService, PhotoRecommendationResponse } from '../../core/ai.service';
@@ -46,7 +46,7 @@ import { firstValueFrom } from 'rxjs';
                 <label class="text-xs text-gray-400">Dispositivo:</label>
                 <select [ngModel]="selectedDeviceId ?? ''" (change)="onDeviceChange($event)" class="bg-neutral-800 border border-neutral-700 rounded px-2 py-2 text-sm text-gray-100">
                   <option value="">Auto</option>
-                  <option *ngFor="let d of devices" [value]="d.deviceId">{{ d.label || ('Cámara ' + (d.deviceId | slice:0:6)) }}</option>
+                  <option *ngFor="let d of devices" [value]="d.deviceId">{{ d.label || ('Cámara ' + (d?.deviceId ? (d.deviceId | slice:0:6) : '---')) }}</option>
                 </select>
                 <button type="button" (click)="refreshDevices()" class="text-xs underline">Refrescar</button>
               </div>
@@ -162,7 +162,9 @@ export class AiPageComponent implements OnInit, OnDestroy {
   @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('snapshotCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
-  constructor(private ai: AiService, private history: RecommendationHistoryService, private router: Router) {}
+  private ai = inject(AiService);
+  private history = inject(RecommendationHistoryService);
+  private router = inject(Router);
 
   private isRelevantText(text: string | null | undefined): boolean {
     const t = (text || '').toLowerCase();
@@ -258,7 +260,7 @@ export class AiPageComponent implements OnInit, OnDestroy {
       this.cameraOn = true
       await this.waitForVideoElementAttach()
       const track = this.mediaStream.getVideoTracks()[0]
-      const caps: any = track.getCapabilities ? track.getCapabilities() : null
+      const caps: any = (track as any).getCapabilities ? (track as any).getCapabilities() : null
       this.torchAvailable = !!(caps && 'torch' in caps && caps.torch)
       this.torchOn = false
       await this.refreshDevices()
@@ -344,8 +346,27 @@ export class AiPageComponent implements OnInit, OnDestroy {
       if (!ctx) { this.errorMsg = 'No se pudo preparar el lienzo.'; return; }
       ctx.drawImage(video, 0, 0, w, h);
 
-      const blob: Blob = await new Promise((resolve, reject) => {
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error('Captura fallida')), 'image/png', 0.95);
+      const blob: Blob = await new Promise<Blob>((resolve, reject) => {
+        try {
+          if (typeof (canvas as any).toBlob === 'function') {
+            (canvas as HTMLCanvasElement).toBlob((b: Blob | null) => {
+              if (b) resolve(b);
+              else reject(new Error('Captura fallida'));
+            }, 'image/png', 0.95);
+          } else {
+            const dataUrl = (canvas as HTMLCanvasElement).toDataURL('image/png', 0.95);
+            const parts = dataUrl.split(',');
+            const mimeMatch = parts[0].match(/:(.*?);/);
+            const mime = mimeMatch && mimeMatch[1] ? mimeMatch[1] : 'image/png';
+            const bstr = atob(parts[1]);
+            const len = bstr.length;
+            const u8arr = new Uint8Array(len);
+            for (let i = 0; i < len; i++) u8arr[i] = bstr.charCodeAt(i);
+            resolve(new Blob([u8arr], { type: mime }));
+          }
+        } catch {
+          reject(new Error('Captura fallida'));
+        }
       });
       const file = new File([blob], 'captura.png', { type: 'image/png' });
       this.imgFile = file;
@@ -589,9 +610,8 @@ export class AiPageComponent implements OnInit, OnDestroy {
       if (lower.startsWith('opciones:')) {
         continue;
       }
-      if (/^\d+\)\s*/.test(line)) {
-        // "1) texto" -> extrae después de "n)"
-        const opt = line.replace(/^\d+\)\s*/, '');
+      if (/^\d+[\.)]\s*/.test(line)) {
+        const opt = line.replace(/^\d+[\.)]\s*/, '');
         if (opt) this.optionsList.push(opt);
         continue;
       }
