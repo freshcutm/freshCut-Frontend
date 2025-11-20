@@ -76,6 +76,11 @@ export class AuthService {
     return true;
   }
 
+  async resetPasswordSimple(email: string, newPassword: string) {
+    await firstValueFrom(this.http.post(`${this.baseUrl}/reset-simple`, { email: (email || '').trim().toLowerCase(), newPassword }));
+    return true;
+  }
+
   private setSession(res: AuthResponse) {
     if (!res?.token || !res.token.trim()) return; // no persistir sesiones inválidas
     this._token.set(res.token);

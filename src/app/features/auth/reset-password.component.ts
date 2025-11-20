@@ -12,15 +12,11 @@ import { NotificationsService } from '../../ui/notifications.service';
   template: `
     <div class="max-w-md mx-auto p-8 bg-white shadow-sm border rounded-lg">
       <h2 class="text-2xl font-semibold mb-2">Cambiar contraseña</h2>
-      <p class="text-sm text-gray-600 mb-6">Introduce tu email, el código recibido y tu nueva contraseña.</p>
+      <p class="text-sm text-gray-600 mb-6">Introduce tu email y tu nueva contraseña. No necesitas código.</p>
       <form (ngSubmit)="submit()" class="space-y-5">
         <div>
           <label class="block text-sm font-medium mb-1">Email</label>
           <input [(ngModel)]="email" name="email" type="email" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Código</label>
-          <input [(ngModel)]="code" name="code" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Nueva contraseña</label>
@@ -43,7 +39,6 @@ import { NotificationsService } from '../../ui/notifications.service';
 })
 export class ResetPasswordComponent {
   email = '';
-  code = '';
   password = '';
   confirm = '';
   done = false;
@@ -51,11 +46,11 @@ export class ResetPasswordComponent {
   constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
   async submit() {
     if (this.submitting) return;
-    if (!this.email || !this.code || !this.password || !this.confirm) return;
+    if (!this.email || !this.password || !this.confirm) return;
     if (this.password !== this.confirm) { this.notifications.error('Las contraseñas no coinciden'); return; }
     this.submitting = true;
     try {
-      await this.auth.resetPassword(this.email, this.code, this.password);
+      await this.auth.resetPasswordSimple(this.email, this.password);
       this.done = true;
       this.notifications.success('Contraseña actualizada');
       setTimeout(() => this.router.navigateByUrl('/auth/login'), 1200);
