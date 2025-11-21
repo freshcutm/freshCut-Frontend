@@ -415,7 +415,7 @@ import { ProfileService } from '../../core/profile.service';
                     <ng-template #noCoupon>
                       <div>No tienes cupón activo. Gira la ruleta para intentar conseguir uno.</div>
                     </ng-template>
-                    <button class="bg-indigo-600 text-white px-3 py-1 rounded" (click)="spinWheel()" [disabled]="spinning">{{ spinning ? 'Girando...' : 'Girar ruleta' }}</button>
+                    <button class="bg-indigo-600 text-white px-3 py-1 rounded" (click)="spinWheel()" [disabled]="!canSpin()">{{ spinning ? 'Girando...' : 'Girar ruleta' }}</button>
                     <div class="text-xs text-gray-500">Probabilidades: 20% (~50%), 30% (~30%), 40% (~15%), 50% (~5%)</div>
                   </div>
                 </div>
@@ -963,6 +963,8 @@ export class HomeComponent implements OnInit {
   wheelAngle = 0;
   spinning = false;
   wheelLabel = '';
+  wheelUsed = false;
+  spunAtCount = 0;
   cutsPct(): number { const idx = this.months.length - 1; const cur = this.monthlyCuts[idx] || 0; const avg = Math.max(1, Math.round(this.totalCuts12m / 12)); return Math.min(100, Math.round((cur / avg) * 100)); }
   spendPct(): number { const idx = this.months.length - 1; const cur = this.monthlySpend[idx] || 0; const avg = Math.max(1, this.avgMonthlySpend || 1); return Math.min(100, Math.round((cur / avg) * 100)); }
   avgCuts(): number { return Math.round(this.totalCuts12m / 12); }
@@ -1017,10 +1019,31 @@ export class HomeComponent implements OnInit {
     this.recommendations = recs;
     this.expenseStatusClass = highSpend ? 'text-red-700' : moderateSpend ? 'text-yellow-700' : 'text-green-700';
     this.restoreCoupon();
+    this.restoreWheelState();
   }
   private restoreCoupon() {
     const key = 'coupon_' + (this.auth.email() || '');
     try { const raw = localStorage.getItem(key); if (raw) { const obj = JSON.parse(raw || '{}'); const pct = parseInt(String(obj?.pct || '0'), 10); if (!isNaN(pct) && pct > 0) this.availableCouponPct = pct; } } catch {}
+  }
+  private restoreWheelState() {
+    const ek = (this.auth.email() || '');
+    try {
+      const rawU = localStorage.getItem('wheel_used_' + ek);
+      const rawC = localStorage.getItem('wheel_count_' + ek);
+      if (rawU) { const o = JSON.parse(rawU || '{}'); this.wheelUsed = !!o?.used; }
+      if (rawC) { const o = JSON.parse(rawC || '{}'); const c = parseInt(String(o?.count || '0'), 10); this.spunAtCount = isNaN(c) ? 0 : c; }
+    } catch {}
+  }
+  private persistWheelState(used: boolean) {
+    const ek = (this.auth.email() || '');
+    try {
+      localStorage.setItem('wheel_used_' + ek, JSON.stringify({ used }));
+      localStorage.setItem('wheel_count_' + ek, JSON.stringify({ count: this.spunAtCount }));
+    } catch {}
+  }
+  canSpin(): boolean {
+    const threshold = (this.spunAtCount > 0) ? (this.spunAtCount + 5) : 5;
+    return (this.myBookings.length >= threshold) && !this.spinning && !this.availableCouponPct && !this.wheelUsed;
   }
   private persistCoupon(pct: number) {
     const key = 'coupon_' + (this.auth.email() || '');
@@ -1032,7 +1055,7 @@ export class HomeComponent implements OnInit {
     this.availableCouponPct = 0;
   }
   spinWheel() {
-    if (this.spinning) return;
+    if (!this.canSpin()) return;
     const weights: { pct: number; w: number; angle: number; label: string }[] = [
       { pct: 20, w: 0.5, angle: 45, label: '20%' },
       { pct: 30, w: 0.3, angle: 135, label: '30%' },
@@ -1047,7 +1070,7 @@ export class HomeComponent implements OnInit {
     const turns = 1440;
     this.wheelLabel = '';
     this.wheelAngle = turns + chosen.angle;
-    setTimeout(() => { this.spinning = false; this.wheelLabel = chosen.label; this.availableCouponPct = chosen.pct; this.persistCoupon(chosen.pct); }, 4800);
+    setTimeout(() => { this.spinning = false; this.wheelLabel = chosen.label; this.availableCouponPct = chosen.pct; this.persistCoupon(chosen.pct); this.spunAtCount = this.myBookings.length; this.wheelUsed = true; this.persistWheelState(true); }, 4800);
   }
   private monthShort(d: Date): string { return new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(d); }
   barHeight(n: number): string { const max = Math.max(...this.monthlyCuts, 1); const h = Math.round((n / max) * 140) + 20; return h + 'px'; }

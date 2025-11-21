@@ -26,9 +26,9 @@ import { NotificationsService } from '../../ui/notifications.service';
             <label class="text-sm font-medium">Elige un servicio</label>
             <span class="text-xs text-gray-500">Selecciona una tarjeta o usa el desplegable</span>
           </div>
-          <div *ngIf="displayServices.length; else noServices" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div *ngIf="services.length; else noServices" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button type="button"
-                    *ngFor="let s of displayServices"
+                    *ngFor="let s of services"
                     (click)="service = s; updatePreview()"
                     class="bg-white border rounded-2xl shadow-sm p-4 text-left hover:shadow-md transition"
                     [ngClass]="service?.id === s.id ? 'ring-2 ring-indigo-500 border-indigo-500' : ''">
@@ -101,7 +101,6 @@ export class BookingFormComponent implements OnInit {
   
   barbers: Barber[] = [];
   services: ServiceItem[] = [];
-  displayServices: ServiceItem[] = [];
   minDate = '';
   minTime: string | null = null;
   isSubmitting = false;
@@ -128,19 +127,7 @@ export class BookingFormComponent implements OnInit {
       }
     });
     this.catalog.listServices().subscribe({
-      next: async (data) => {
-        this.services = data;
-        try {
-          const rate = await this.currency.ensureRate();
-          const toCop = (cents: number) => (cents || 0) / 100 * rate;
-          const filtered = data.filter(s => {
-            const cop = toCop(s.priceCents);
-            return cop >= 20000 && cop <= 40000;
-          });
-          this.displayServices = filtered.length ? filtered : data;
-        } catch { this.displayServices = data; }
-        this.updatePreview();
-      },
+      next: (data) => { this.services = data; this.updatePreview(); },
       error: (err) => {
         if (err?.status === 401) { this.auth.logout(); return; }
         this.notifications.error(err?.error?.error || 'No se pudo cargar servicios');
@@ -228,6 +215,8 @@ export class BookingFormComponent implements OnInit {
     const key = 'coupon_' + (this.auth.email() || '');
     try { localStorage.removeItem(key); } catch {}
     this.couponPct = 0;
+    const ek = (this.auth.email() || '');
+    try { localStorage.setItem('wheel_used_' + ek, JSON.stringify({ used: false })); } catch {}
   }
   updatePreview() {
     if (!this.service) { this.finalPricePreview = undefined; return; }
