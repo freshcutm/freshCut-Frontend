@@ -13,8 +13,38 @@ import { NotificationsService } from '../../ui/notifications.service';
   imports: [CommonModule, RouterLink, FormsModule],
   template: `
     <div class="max-w-6xl mx-auto px-4 sm:px-0">
-      <h2 class="barber-title text-3xl font-bold mb-2">Mi panel</h2>
+      <div class="flex items-center mb-2">
+        <h2 class="barber-title text-3xl font-bold">Mi panel</h2>
+        <span class="ml-auto"></span>
+        <button class="btn btn-muted text-xs" (click)="darkMode = !darkMode">{{ darkMode ? 'Claro' : 'Oscuro' }}</button>
+      </div>
       <p class="text-sm text-gray-600 mb-6">Bienvenido, <span class="font-medium">{{ auth.email() }}</span></p>
+
+      <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-purple-500 text-white p-4 mb-6 shadow">
+        <div class="flex items-center gap-3">
+          <div class="text-2xl">✂️</div>
+          <div class="font-semibold">Resumen rápido</div>
+          <span class="ml-auto text-sm">Últimos {{ months.length }} meses</span>
+        </div>
+        <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+          <div class="bg-white/10 rounded px-3 py-2">
+            <div class="text-indigo-200">Cortes</div>
+            <div class="text-lg font-bold">{{ totalCuts12m }}</div>
+          </div>
+          <div class="bg-white/10 rounded px-3 py-2">
+            <div class="text-indigo-200">Gasto total</div>
+            <div class="text-lg font-bold">{{ formatCOP(totalSpend12m) }}</div>
+          </div>
+          <div class="bg-white/10 rounded px-3 py-2">
+            <div class="text-indigo-200">Promedio mensual</div>
+            <div class="text-lg font-bold">{{ formatCOP(avgMonthlySpend) }}</div>
+          </div>
+          <div class="bg-white/10 rounded px-3 py-2">
+            <div class="text-indigo-200">Costo promedio</div>
+            <div class="text-lg font-bold">{{ formatCOP(avgCostPerCut) }}</div>
+          </div>
+        </div>
+      </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         <div class="border rounded p-4 bg-white lg:col-span-1">
@@ -26,9 +56,9 @@ import { NotificationsService } from '../../ui/notifications.service';
             <a routerLink="/ia" class="text-indigo-600 hover:underline">Asistente IA</a>
           </div>
         </div>
-        <div class="border rounded p-4 bg-white lg:col-span-3">
+        <div class="border rounded-xl p-4 backdrop-blur lg:col-span-3 shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
           <div class="flex items-center justify-between mb-2">
-            <h3 class="barber-subtitle font-semibold">Frecuencia de cortes (12 meses)</h3>
+            <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">📈</span> Frecuencia de cortes</h3>
             <div class="flex items-center gap-3">
               <label class="text-xs text-gray-600">Rango</label>
               <select class="border rounded px-2 py-1 text-xs" [(ngModel)]="rangeMonths" (ngModelChange)="rebuild()">
@@ -39,10 +69,11 @@ import { NotificationsService } from '../../ui/notifications.service';
               <span class="text-xs text-gray-500">Total: {{ totalCuts12m }}</span>
             </div>
           </div>
-          <div class="h-36 flex items-end gap-1">
+          <div class="h-40 flex items-end gap-1 rounded-lg p-2 bg-[length:100%_16px]" [ngStyle]="{ backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.06) 1px, transparent 1px)' }">
             <div *ngFor="let m of months; let i = index"
                  class="flex-1 relative group"
                  [style.height]="barHeight(monthlyCuts[i])"
+                 [style.transition]="'height 300ms ease'"
                  [ngClass]="barColor(monthlyCuts[i])">
               <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-700">{{ monthlyCuts[i] }}</div>
               <div class="absolute bottom-0 left-0 right-0 h-1 bg-black/5"></div>
@@ -53,7 +84,7 @@ import { NotificationsService } from '../../ui/notifications.service';
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="border rounded p-4 bg-white">
+        <div class="border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
           <h3 class="barber-subtitle font-semibold mb-2">Gasto acumulado</h3>
           <div class="flex items-baseline gap-3">
             <div class="text-2xl font-bold" [ngClass]="expenseStatusClass">{{ formatCOP(totalSpend12m) }}</div>
@@ -61,12 +92,13 @@ import { NotificationsService } from '../../ui/notifications.service';
           </div>
           <div class="mt-2 text-xs text-gray-600">Promedio mensual: {{ formatCOP(avgMonthlySpend) }}</div>
         </div>
-        <div class="border rounded p-4 bg-white lg:col-span-2">
+        <div class="border rounded-xl p-4 backdrop-blur lg:col-span-2 shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
           <h3 class="barber-subtitle font-semibold mb-2">Gasto mensual (12 meses)</h3>
-          <div class="h-36 flex items-end gap-1">
+          <div class="h-40 flex items-end gap-1 rounded-lg p-2 bg-[length:100%_16px]" [ngStyle]="{ backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.06) 1px, transparent 1px)' }">
             <div *ngFor="let m of months; let i = index"
                  class="flex-1 relative group"
                  [style.height]="barHeightSpend(monthlySpend[i])"
+                 [style.transition]="'height 300ms ease'"
                  [ngClass]="spendBarColor(monthlySpend[i])">
               <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-700">{{ formatCOP(monthlySpend[i]) }}</div>
               <div class="text-[10px] text-gray-600 text-center mt-1">{{ m }}</div>
@@ -76,7 +108,7 @@ import { NotificationsService } from '../../ui/notifications.service';
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="border rounded p-4 bg-white lg:col-span-2">
+        <div class="border rounded-xl p-4 backdrop-blur shadow lg:col-span-2" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
           <div class="flex items-center justify-between mb-2">
             <h3 class="barber-subtitle font-semibold">Historial de servicios</h3>
             <a routerLink="/reservas" class="text-xs text-indigo-600 hover:underline">Ver todas</a>
@@ -92,15 +124,20 @@ import { NotificationsService } from '../../ui/notifications.service';
             <div *ngIf="!recentBookings.length" class="py-3 text-sm text-gray-500">Aún no tienes servicios registrados.</div>
           </div>
         </div>
-        <div class="border rounded p-4 bg-white">
-          <div class="flex items-center gap-2 mb-2">
+        <div class="border rounded-xl p-0 backdrop-blur shadow overflow-hidden" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
+          <div class="bg-gradient-to-r from-indigo-600 to-purple-500 text-white px-4 py-3 flex items-center gap-2">
             <div class="text-xl">💡</div>
             <h3 class="barber-subtitle font-semibold">Análisis inteligente</h3>
           </div>
-          <div class="text-sm mb-2" [ngClass]="alertClass">{{ alertMessage }}</div>
-          <ul class="text-sm list-disc pl-5 space-y-1">
-            <li *ngFor="let r of recommendations">{{ r }}</li>
-          </ul>
+          <div class="p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-[10px] uppercase tracking-wide text-gray-500">Estado</span>
+            </div>
+            <div class="text-sm mb-2" [ngClass]="alertClass">{{ alertMessage }}</div>
+            <ul class="text-sm list-disc pl-5 space-y-1">
+              <li *ngFor="let r of recommendations">{{ r }}</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -124,6 +161,7 @@ export class ClientDashboardComponent implements OnInit {
   recommendations: string[] = [];
   expenseStatusClass = '';
   alertClass = '';
+  darkMode = false;
 
   ngOnInit(): void {
     this.currency.warmup();

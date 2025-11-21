@@ -12,7 +12,36 @@ import { Barber } from '../../core/catalog.service';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="max-w-6xl mx-auto px-4 sm:px-0">
-      <h2 class="barber-title text-3xl font-bold mb-6">Panel de barbero</h2>
+      <div class="flex items-center mb-6">
+        <h2 class="barber-title text-3xl font-bold">Panel de barbero</h2>
+        <span class="ml-auto"></span>
+        <button class="btn btn-muted text-xs" (click)="darkMode = !darkMode">{{ darkMode ? 'Claro' : 'Oscuro' }}</button>
+      </div>
+      <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-purple-500 text-white p-4 mb-6 shadow">
+        <div class="flex items-center gap-3">
+          <div class="text-2xl">💼</div>
+          <div class="font-semibold">Resumen de negocio</div>
+          <span class="ml-auto text-sm">Semana actual</span>
+        </div>
+        <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+          <div class="bg-white/10 rounded px-3 py-2">
+            <div class="text-indigo-200">Ocupación</div>
+            <div class="text-lg font-bold">{{ weeklyOccupancyPct }}%</div>
+          </div>
+          <div class="bg-white/10 rounded px-3 py-2">
+            <div class="text-indigo-200">Proyección</div>
+            <div class="text-lg font-bold">{{ formatCOP(projectedIncome) }}</div>
+          </div>
+          <div class="bg-white/10 rounded px-3 py-2">
+            <div class="text-indigo-200">Delta mensual</div>
+            <div class="text-lg font-bold">{{ currentVsPrevDelta }}%</div>
+          </div>
+          <div class="bg-white/10 rounded px-3 py-2">
+            <div class="text-indigo-200">Cancelaciones</div>
+            <div class="text-lg font-bold">{{ cancelRate }}%</div>
+          </div>
+        </div>
+      </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-1 border rounded p-4 bg-white">
@@ -75,7 +104,7 @@ import { Barber } from '../../core/catalog.service';
           </ng-template>
         </div>
 
-        <div class="lg:col-span-2 border rounded p-4 bg-white">
+        <div class="lg:col-span-2 border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
           <h3 class="font-medium mb-2">Mis reservas</h3>
           <div class="flex flex-wrap items-center gap-2 mb-3">
             <span class="text-xs text-gray-600">Filtro:</span>
@@ -86,7 +115,7 @@ import { Barber } from '../../core/catalog.service';
             </select>
             <button class="text-xs underline" (click)="refreshBookings()">Actualizar</button>
           </div>
-          <div *ngIf="bookings; else loadingBk" class="overflow-x-auto -mx-4 sm:mx-0">
+          <div *ngIf="bookings; else loadingBk" class="overflow-x-auto -mx-4 sm:mx-0 rounded-xl border shadow-sm" [ngClass]="darkMode ? 'border-neutral-700' : ''">
             <table class="min-w-full text-sm">
               <thead>
                 <tr class="text-left">
@@ -98,8 +127,8 @@ import { Barber } from '../../core/catalog.service';
                   <th class="py-2 pr-4">Acciones</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr *ngFor="let b of filteredBookings" class="border-t">
+              <tbody class="divide-y">
+                <tr *ngFor="let b of filteredBookings" class="odd:bg-white even:bg-gray-50">
                   <td class="py-2 pr-4">{{ b.clientName }}</td>
                   <td class="py-2 pr-4">{{ b.service }}</td>
                   <td class="py-2 pr-4">{{ formatDate(b.startTime) }}</td>
@@ -125,7 +154,7 @@ import { Barber } from '../../core/catalog.service';
         </div>
       </div>
 
-      <div class="mt-6 border rounded p-4 bg-white">
+      <div class="mt-6 border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
         <h3 class="font-medium mb-2">Mi disponibilidad</h3>
         <div *ngIf="schedules; else loadingSc" class="space-y-4">
           <div class="grid md:grid-cols-2 gap-4">
@@ -169,16 +198,16 @@ import { Barber } from '../../core/catalog.service';
       </div>
 
       <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="border rounded p-4 bg-white">
+        <div class="border rounded p-4" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white'">
           <div class="flex items-center justify-between mb-2">
-            <h3 class="barber-subtitle font-semibold">Calendario inteligente (semana)</h3>
+            <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">🗓️</span> Calendario inteligente (semana)</h3>
             <div class="text-xs text-gray-600">Ocupación semanal: {{ weeklyOccupancyPct }}%</div>
           </div>
           <div class="grid grid-cols-7 gap-2 mb-2">
-            <div *ngFor="let d of weekDays" class="text-xs text-gray-700 text-center font-medium">{{ d.label }}</div>
+            <div *ngFor="let d of weekDays" class="text-xs text-gray-700 text-center font-medium bg-gray-50 rounded py-1">{{ d.label }}</div>
           </div>
           <div class="grid grid-cols-7 gap-2">
-            <div *ngFor="let d of weekDays" class="border rounded p-2 h-40 overflow-hidden relative">
+            <div *ngFor="let d of weekDays" class="border rounded-lg p-2 h-40 overflow-hidden relative bg-white">
               <div class="absolute inset-0" [ngStyle]="{ background: d.available > 0 ? 'linear-gradient(to top, rgba(16,185,129,0.15) '+ d.occupancyPct +'%, transparent '+ d.occupancyPct +'%)' : 'transparent' }"></div>
               <div class="relative z-10">
                 <div class="text-[10px] text-gray-500 mb-1">Ocupación: {{ d.occupancyPct }}%</div>
@@ -203,9 +232,9 @@ import { Barber } from '../../core/catalog.service';
       </div>
 
       <div class="mt-6">
-        <div class="border rounded p-4 bg-white">
+        <div class="border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
           <div class="flex items-center justify-between mb-2">
-            <h3 class="barber-subtitle font-semibold">Calendario mensual</h3>
+            <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">📆</span> Calendario mensual</h3>
             <div class="flex items-center gap-2 text-xs text-gray-600">
               <button class="underline" (click)="prevMonth()">Anterior</button>
               <div>{{ monthName(monthCursor) }}</div>
@@ -216,7 +245,7 @@ import { Barber } from '../../core/catalog.service';
             <div *ngFor="let w of ['L','M','X','J','V','S','D']" class="text-center">{{ w }}</div>
           </div>
           <div class="grid grid-cols-7 gap-2">
-            <div *ngFor="let d of monthDays" class="border rounded p-2 h-24 relative cursor-pointer" (click)="openDay(d.date)">
+            <div *ngFor="let d of monthDays" class="border rounded-lg p-2 h-24 relative cursor-pointer bg-white hover:bg-indigo-50/40 transition" (click)="openDay(d.date)">
               <div class="flex items-center justify-between text-[11px] text-gray-600">
                 <span>{{ d.date.getDate() }}</span>
                 <span>{{ d.occupancyPct }}%</span>
@@ -232,9 +261,9 @@ import { Barber } from '../../core/catalog.service';
       </div>
 
       <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="border rounded p-4 bg-white lg:col-span-2">
+        <div class="border rounded-xl p-4 backdrop-blur shadow lg:col-span-2" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
           <div class="flex items-center justify-between mb-2">
-            <h3 class="barber-subtitle font-semibold">Ingresos mensuales</h3>
+            <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">💰</span> Ingresos mensuales</h3>
             <div class="text-xs text-gray-600">Actual vs anterior: {{ currentVsPrevDelta }}%</div>
           </div>
           <div class="h-36 flex items-end gap-1">
@@ -258,7 +287,7 @@ import { Barber } from '../../core/catalog.service';
             </div>
           </div>
         </div>
-        <div class="border rounded p-4 bg-white">
+        <div class="border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
           <div class="flex items-center gap-2 mb-2">
             <div class="text-xl">🧠</div>
             <h3 class="barber-subtitle font-semibold">Asistente</h3>
@@ -469,6 +498,7 @@ export class BarberDashboardComponent implements OnInit {
   topClients: { name: string; revenue: number; count: number }[] = [];
   assistantTips: string[] = [];
   private assistantHeadlineLast?: string;
+  darkMode = false;
 
   get weekDays() {
     const start = this.startOfWeek(new Date());
