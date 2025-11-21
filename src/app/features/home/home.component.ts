@@ -394,6 +394,33 @@ import { ProfileService } from '../../core/profile.service';
                   </div>
                 </div>
               </div>
+              <div class="border rounded-xl p-4 backdrop-blur shadow bg-white/90" *ngIf="myBookings.length >= 3">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">🎯</span> Ruleta de descuentos</h3>
+                  <div class="text-xs text-gray-600">Gira para obtener 20%–50%</div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                  <div class="flex items-center justify-center">
+                    <div class="relative w-40 h-40 rounded-full" [style.transform]="'rotate(' + wheelAngle + 'deg)'" [style.transition]="spinning ? 'transform 2.2s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none'" [ngStyle]="{ background: 'conic-gradient(#16a34a 0 90deg, #22c55e 90deg 180deg, #84cc16 180deg 270deg, #f59e0b 270deg 360deg)' }">
+                      <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-2 h-16 bg-white rounded"></div>
+                      </div>
+                      <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-xs text-gray-700">{{ wheelLabel }}</div>
+                      </div>
+                    </div>
+                    <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-[14px] border-l-transparent border-r-transparent border-b-red-500"></div>
+                  </div>
+                  <div class="space-y-2 text-sm">
+                    <div *ngIf="availableCouponPct; else noCoupon">Cupón disponible: <span class="font-semibold">{{ availableCouponPct }}%</span> se aplicará en tu próxima reserva</div>
+                    <ng-template #noCoupon>
+                      <div>No tienes cupón activo. Gira la ruleta para intentar conseguir uno.</div>
+                    </ng-template>
+                    <button class="bg-indigo-600 text-white px-3 py-1 rounded" (click)="spinWheel()" [disabled]="spinning">{{ spinning ? 'Girando...' : 'Girar ruleta' }}</button>
+                    <div class="text-xs text-gray-500">Probabilidades: 20% (40%), 30% (30%), 40% (20%), 50% (10%)</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -456,7 +483,36 @@ import { ProfileService } from '../../core/profile.service';
           </div>
         </ng-template>
 
-        <div class="grid md:grid-cols-2 gap-8">
+        <div class="mt-8">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-2xl font-semibold">Barberos destacados</h2>
+            <div class="flex items-center gap-2">
+              <button class="border rounded px-3 py-1" (click)="carouselPrev()">‹</button>
+              <button class="border rounded px-3 py-1" (click)="carouselNext()">›</button>
+            </div>
+          </div>
+          <div class="relative overflow-hidden border rounded-xl bg-white" (mouseenter)="carouselPause()" (mouseleave)="carouselResume()">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 items-stretch">
+              <div class="border rounded-lg p-4 bg-gray-50">
+                <div class="text-sm text-gray-500 mb-1">Anterior</div>
+                <div class="font-medium">{{ carouselPrevNode?.barber?.name || '—' }}</div>
+                <div class="text-xs text-gray-600">{{ (carouselPrevNode?.barber?.specialties || []).join(', ') }}</div>
+              </div>
+              <div class="border rounded-lg p-4 bg-indigo-50">
+                <div class="text-sm text-indigo-700 mb-1">Actual</div>
+                <div class="font-semibold">{{ carouselCurrentNode?.barber?.name || '—' }}</div>
+                <div class="text-xs text-indigo-700">{{ (carouselCurrentNode?.barber?.specialties || []).join(', ') }}</div>
+              </div>
+              <div class="border rounded-lg p-4 bg-gray-50">
+                <div class="text-sm text-gray-500 mb-1">Siguiente</div>
+                <div class="font-medium">{{ carouselNextNode?.barber?.name || '—' }}</div>
+                <div class="text-xs text-gray-600">{{ (carouselNextNode?.barber?.specialties || []).join(', ') }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 mt-8">
           <div class="md:col-span-2">
             <div class="flex items-center justify-between">
               <h2 class="text-2xl font-semibold">Servicios populares</h2>
@@ -516,12 +572,17 @@ export class HomeComponent implements OnInit {
   private assistantHeadlineLast?: string;
   userName: string = '';
   barberName: string = '';
+  featuredBarbers: Barber[] = [];
+  carouselTimer: any;
+  carouselPrevNode?: { barber: Barber; prev: any; next: any } | null;
+  carouselCurrentNode?: { barber: Barber; prev: any; next: any } | null;
+  carouselNextNode?: { barber: Barber; prev: any; next: any } | null;
 
   constructor(private catalog: CatalogService, private currency: CurrencyService, public auth: AuthService, private barber: BarberService, private notifications: NotificationsService, private confirm: ConfirmService, private bookingSvc: BookingService, private profile: ProfileService) {}
 
   ngOnInit(): void {
     this.currency.warmup();
-    this.catalog.listBarbers().subscribe({ next: bs => this.barbers = bs });
+    this.catalog.listBarbers().subscribe({ next: bs => { this.barbers = bs; this.featuredBarbers = (bs || []).slice(0, 8); this.buildCarousel(); this.carouselResume(); } });
     this.catalog.listServices().subscribe({
       next: ss => {
         this.services = ss;
@@ -550,6 +611,37 @@ export class HomeComponent implements OnInit {
       this.profile.me().subscribe({ next: (p) => { this.userName = p?.name || ''; } });
     }
   }
+
+  private buildCarousel() {
+    const arr = this.featuredBarbers || [];
+    if (!arr.length) { this.carouselPrevNode = null; this.carouselCurrentNode = null; this.carouselNextNode = null; return; }
+    const nodes = arr.map(b => ({ barber: b, prev: null as any, next: null as any }));
+    for (let i = 0; i < nodes.length; i++) {
+      const prev = (i - 1 + nodes.length) % nodes.length;
+      const next = (i + 1) % nodes.length;
+      nodes[i].prev = nodes[prev];
+      nodes[i].next = nodes[next];
+    }
+    this.carouselCurrentNode = nodes[0];
+    this.carouselPrevNode = this.carouselCurrentNode.prev;
+    this.carouselNextNode = this.carouselCurrentNode.next;
+  }
+  carouselNext() {
+    if (!this.carouselCurrentNode || !this.carouselCurrentNode.next || !this.carouselCurrentNode.prev) return;
+    const cur = this.carouselCurrentNode.next;
+    this.carouselCurrentNode = cur;
+    this.carouselPrevNode = cur.prev || null;
+    this.carouselNextNode = cur.next || null;
+  }
+  carouselPrev() {
+    if (!this.carouselCurrentNode || !this.carouselCurrentNode.next || !this.carouselCurrentNode.prev) return;
+    const cur = this.carouselCurrentNode.prev;
+    this.carouselCurrentNode = cur;
+    this.carouselPrevNode = cur.prev || null;
+    this.carouselNextNode = cur.next || null;
+  }
+  carouselPause() { if (this.carouselTimer) { clearInterval(this.carouselTimer); this.carouselTimer = null; } }
+  carouselResume() { if (!this.carouselTimer) { this.carouselTimer = setInterval(() => this.carouselNext(), 4000); } }
 
   formatPrice(cents: number) {
     return this.currency.formatEurosCentsToCOP(cents);
@@ -868,6 +960,10 @@ export class HomeComponent implements OnInit {
   expenseStatusClass = '';
   alertClass = '';
   darkMode = false;
+  availableCouponPct: number = 0;
+  wheelAngle = 0;
+  spinning = false;
+  wheelLabel = '';
   cutsPct(): number { const idx = this.months.length - 1; const cur = this.monthlyCuts[idx] || 0; const avg = Math.max(1, Math.round(this.totalCuts12m / 12)); return Math.min(100, Math.round((cur / avg) * 100)); }
   spendPct(): number { const idx = this.months.length - 1; const cur = this.monthlySpend[idx] || 0; const avg = Math.max(1, this.avgMonthlySpend || 1); return Math.min(100, Math.round((cur / avg) * 100)); }
   avgCuts(): number { return Math.round(this.totalCuts12m / 12); }
@@ -921,6 +1017,38 @@ export class HomeComponent implements OnInit {
     recs.push('Activa descuentos por referidos o acumula puntos de lealtad');
     this.recommendations = recs;
     this.expenseStatusClass = highSpend ? 'text-red-700' : moderateSpend ? 'text-yellow-700' : 'text-green-700';
+    this.restoreCoupon();
+  }
+  private restoreCoupon() {
+    const key = 'coupon_' + (this.auth.email() || '');
+    try { const raw = localStorage.getItem(key); if (raw) { const obj = JSON.parse(raw || '{}'); const pct = parseInt(String(obj?.pct || '0'), 10); if (!isNaN(pct) && pct > 0) this.availableCouponPct = pct; } } catch {}
+  }
+  private persistCoupon(pct: number) {
+    const key = 'coupon_' + (this.auth.email() || '');
+    try { localStorage.setItem(key, JSON.stringify({ pct, ts: Date.now() })); } catch {}
+  }
+  private clearCoupon() {
+    const key = 'coupon_' + (this.auth.email() || '');
+    try { localStorage.removeItem(key); } catch {}
+    this.availableCouponPct = 0;
+  }
+  spinWheel() {
+    if (this.spinning) return;
+    const weights: { pct: number; w: number; angle: number; label: string }[] = [
+      { pct: 20, w: 0.4, angle: 45, label: '20%' },
+      { pct: 30, w: 0.3, angle: 135, label: '30%' },
+      { pct: 40, w: 0.2, angle: 225, label: '40%' },
+      { pct: 50, w: 0.1, angle: 315, label: '50%' }
+    ];
+    const r = Math.random();
+    let acc = 0;
+    let chosen = weights[0];
+    for (const opt of weights) { acc += opt.w; if (r <= acc) { chosen = opt; break; } }
+    this.spinning = true;
+    const turns = 720;
+    this.wheelLabel = '';
+    this.wheelAngle = turns + chosen.angle;
+    setTimeout(() => { this.spinning = false; this.wheelLabel = chosen.label; this.availableCouponPct = chosen.pct; this.persistCoupon(chosen.pct); }, 2300);
   }
   private monthShort(d: Date): string { return new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(d); }
   barHeight(n: number): string { const max = Math.max(...this.monthlyCuts, 1); const h = Math.round((n / max) * 140) + 20; return h + 'px'; }

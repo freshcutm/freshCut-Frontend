@@ -29,7 +29,7 @@ import { NotificationsService } from '../../ui/notifications.service';
           <div *ngIf="services.length; else noServices" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button type="button"
                     *ngFor="let s of services"
-                    (click)="service = s"
+                    (click)="service = s; updatePreview()"
                     class="bg-white border rounded-2xl shadow-sm p-4 text-left hover:shadow-md transition"
                     [ngClass]="service?.id === s.id ? 'ring-2 ring-indigo-500 border-indigo-500' : ''">
               <div class="flex items-center gap-3 mb-1">
@@ -49,6 +49,11 @@ import { NotificationsService } from '../../ui/notifications.service';
           <ng-template #noServices>
             <div class="border rounded p-3 text-sm text-gray-600">Aún no hay servicios disponibles.</div>
           </ng-template>
+        </div>
+
+        <div class="bg-indigo-50 border border-indigo-100 rounded p-4" *ngIf="couponPct && service">
+          <div class="text-sm">Cupón activo: <span class="font-semibold">{{ couponPct }}%</span> de descuento en este servicio</div>
+          <div class="text-xs text-gray-600">Precio estimado: <span class="font-semibold">{{ priceWithCoupon(service.priceCents || 0) }}</span> (antes {{ formatPrice(service.priceCents || 0) }})</div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,6 +104,8 @@ export class BookingFormComponent implements OnInit {
   minDate = '';
   minTime: string | null = null;
   isSubmitting = false;
+  couponPct = 0;
+  finalPricePreview?: number;
 
   constructor(
     private bookingService: BookingService,
@@ -120,12 +127,13 @@ export class BookingFormComponent implements OnInit {
       }
     });
     this.catalog.listServices().subscribe({
-      next: (data) => this.services = data,
+      next: (data) => { this.services = data; this.updatePreview(); },
       error: (err) => {
         if (err?.status === 401) { this.auth.logout(); return; }
         this.notifications.error(err?.error?.error || 'No se pudo cargar servicios');
       }
     });
+    this.restoreCoupon();
   }
 
   iconFor(name: string): string { return serviceIconPath(name); }
@@ -157,6 +165,7 @@ export class BookingFormComponent implements OnInit {
       next: (res) => {
         this.isSubmitting = false;
         if (res && res.id) {
+          this.clearCoupon();
           this.notifications.success('Reserva creada');
           this.router.navigateByUrl('/reservas');
         } else {
@@ -189,9 +198,29 @@ export class BookingFormComponent implements OnInit {
   formatPrice(cents: number): string {
     return this.currency.formatEurosCentsToCOP(cents);
   }
+  priceWithCoupon(cents: number): string {
+    const pct = this.couponPct || 0;
+    const discounted = Math.round((cents || 0) * (100 - pct) / 100);
+    return this.currency.formatEurosCentsToCOP(discounted);
+  }
 
   realDuration(s: ServiceItem): number {
     return realDurationMinutes(s.name, s.durationMinutes);
+  }
+  restoreCoupon() {
+    const key = 'coupon_' + (this.auth.email() || '');
+    try { const raw = localStorage.getItem(key); if (raw) { const obj = JSON.parse(raw || '{}'); const pct = parseInt(String(obj?.pct || '0'), 10); if (!isNaN(pct) && pct > 0) this.couponPct = pct; } } catch {}
+  }
+  clearCoupon() {
+    const key = 'coupon_' + (this.auth.email() || '');
+    try { localStorage.removeItem(key); } catch {}
+    this.couponPct = 0;
+  }
+  updatePreview() {
+    if (!this.service) { this.finalPricePreview = undefined; return; }
+    const base = this.service.priceCents || 0;
+    const pct = this.couponPct || 0;
+    this.finalPricePreview = Math.round(base * (100 - pct) / 100);
   }
 
   private formatDate(d: Date): string {
