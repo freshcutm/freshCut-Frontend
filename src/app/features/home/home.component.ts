@@ -54,26 +54,26 @@ import { ProfileService } from '../../core/profile.service';
 
             <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-purple-500 text-white p-4 mb-6 shadow">
               <div class="flex items-center gap-3">
-                <div class="text-2xl">💼</div>
-                <div class="font-semibold">Resumen de negocio</div>
-                <span class="ml-auto text-sm">Semana actual</span>
+                <div class="text-2xl text-white">💼</div>
+                <div class="font-semibold text-white">Resumen de negocio</div>
+                <span class="ml-auto text-sm text-white">Semana actual</span>
               </div>
               <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <div class="bg-white/10 rounded px-3 py-2">
                   <div class="text-white">Ocupación</div>
-                  <div class="text-lg font-bold">{{ weeklyOccupancyPct }}%</div>
+                  <div class="text-lg font-bold text-white">{{ weeklyOccupancyPct }}%</div>
                 </div>
                 <div class="bg-white/10 rounded px-3 py-2">
                   <div class="text-white">Proyección</div>
-                  <div class="text-lg font-bold">{{ formatCOPCents(projectedIncome) }}</div>
+                  <div class="text-lg font-bold text-white">{{ formatCOPCents(projectedIncome) }}</div>
                 </div>
                 <div class="bg-white/10 rounded px-3 py-2">
                   <div class="text-white">Delta mensual</div>
-                  <div class="text-lg font-bold">{{ currentVsPrevDelta }}%</div>
+                  <div class="text-lg font-bold text-white">{{ currentVsPrevDelta }}%</div>
                 </div>
                 <div class="bg-white/10 rounded px-3 py-2">
                   <div class="text-white">Cancelaciones</div>
-                  <div class="text-lg font-bold">{{ cancelRate }}%</div>
+                  <div class="text-lg font-bold text-white">{{ cancelRate }}%</div>
                 </div>
               </div>
             </div>
