@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { NotificationsService } from '../../ui/notifications.service';
 
@@ -10,22 +10,26 @@ import { NotificationsService } from '../../ui/notifications.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <div class="max-w-md mx-auto p-8 bg-white shadow-sm border rounded-lg">
-      <h2 class="text-2xl font-semibold mb-6">Crear cuenta</h2>
+    <div class="max-w-xl mx-auto p-10 bg-white shadow-lg border border-indigo-100 rounded-2xl">
+      <div class="text-center mb-6">
+        <h2 class="text-3xl font-bold tracking-tight">¡Bienvenido a FreshCut!</h2>
+        <p class="text-sm text-gray-600 mt-2">Crea tu cuenta para reservar al instante y disfrutar del asistente IA.</p>
+      </div>
+      <h3 class="text-xl font-semibold mb-6">Crear cuenta</h3>
       <form (ngSubmit)="register()" class="space-y-5">
         <div>
           <label class="block text-sm font-medium mb-1">Nombre</label>
-          <input [(ngModel)]="name" name="name" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+          <input [(ngModel)]="name" name="name" class="w-full border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Email</label>
-          <input [(ngModel)]="email" name="email" type="email" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+          <input [(ngModel)]="email" name="email" type="email" class="w-full border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Contraseña</label>
           <div class="relative">
-            <input [(ngModel)]="password" name="password" [type]="showPassword ? 'text' : 'password'" autocomplete="new-password" class="w-full border rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
-            <button type="button" (click)="togglePassword()" [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" [attr.title]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" class="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">
+            <input [(ngModel)]="password" name="password" [type]="showPassword ? 'text' : 'password'" autocomplete="new-password" class="w-full border rounded px-4 py-3 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+            <button type="button" (click)="togglePassword()" [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" [attr.title]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700">
               <svg *ngIf="!showPassword" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
@@ -42,7 +46,7 @@ import { NotificationsService } from '../../ui/notifications.service';
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <button class="w-full sm:w-auto btn btn-primary" type="submit" [disabled]="isSubmitting">Crear cuenta</button>
+          <button class="w-full sm:w-auto btn btn-primary px-6 py-3 text-base" type="submit" [disabled]="isSubmitting">Crear cuenta</button>
           <a routerLink="/auth/register/barbero" class="text-indigo-600 hover:underline">Soy barbero</a>
         </div>
         <div *ngIf="showSpinner" class="flex items-center gap-2 text-sm text-gray-600">
@@ -62,7 +66,12 @@ export class RegisterComponent {
   showSpinner = false;
   private loadingTimeout: any;
 
-  constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute, private notifications: NotificationsService) {
+    try {
+      const e = (this.route.snapshot.queryParamMap.get('email') || '').trim();
+      if (e) this.email = e;
+    } catch {}
+  }
 
   async register() {
     // Validación de contraseña fuerte: mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial
