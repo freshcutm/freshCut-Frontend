@@ -31,8 +31,8 @@ export class AuthService {
       // No enviar la contraseña en texto plano si no hay Web Crypto
       throw { error: { message: 'Tu navegador no soporta cifrado local. No enviaremos tu contraseña en texto plano. Actualiza el navegador para iniciar sesión de forma segura.' } };
     }
-    // Enviar solo el hash
-    const payload: any = { email: emailNorm, passwordSha256: passwordSha };
+    // Enviar solo el hash en el campo `password` (no exponer texto plano ni usar passwordSha256)
+    const payload: any = { email: emailNorm, password: passwordSha };
     const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/login`, payload, { withCredentials: true }));
     // Evitar guardar sesión si el backend respondió éxito lógico pero sin token
     if (!res?.token || !res.token.trim()) {
@@ -44,7 +44,9 @@ export class AuthService {
   }
 
   async register(name: string, email: string, password: string, role?: 'USER' | 'ADMIN' | 'BARBER', barberId?: string) {
-    const payload: any = { name: (name || '').trim(), email: (email || '').trim().toLowerCase(), password };
+    // Hash en el cliente para no exponer la contraseña en el payload de red
+    const passwordSha = await sha256Hex(password || '');
+    const payload: any = { name: (name || '').trim(), email: (email || '').trim().toLowerCase(), password: passwordSha };
     if (role) payload.role = role;
     if (role === 'BARBER' && barberId) payload.barberId = barberId;
     const res = await firstValueFrom(this.http.post<AuthResponse>(`${this.baseUrl}/register`, payload, { withCredentials: true }));
