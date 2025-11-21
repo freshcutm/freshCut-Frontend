@@ -412,7 +412,7 @@ import { ProfileService } from '../../core/profile.service';
                           <div class="text-xs text-gray-800 bg-white/70 px-2 py-1 rounded">{{ wheelLabel }}</div>
                         </div>
                       </div>
-                      <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-[14px] border-l-transparent border-r-transparent border-t-red-500"></div>
+                      <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-[14px] border-l-transparent border-r-transparent border-b-red-500"></div>
                     </div>
                   </div>
                   <div class="space-y-2 text-sm">
@@ -1075,7 +1075,7 @@ export class HomeComponent implements OnInit {
     this.spinning = true;
     const turns = 1440;
     this.wheelLabel = '';
-    this.wheelAngle = turns + (90 - chosen.angle);
+    this.wheelAngle = turns + (chosen.angle - 90);
     setTimeout(() => { this.spinning = false; this.wheelLabel = chosen.label; this.availableCouponPct = chosen.pct; this.persistCoupon(chosen.pct); this.spunAtCount = this.myBookings.length; this.wheelUsed = true; this.persistWheelState(true); }, 4800);
   }
   private monthShort(d: Date): string { return new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(d); }
