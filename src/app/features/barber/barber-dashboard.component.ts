@@ -156,35 +156,53 @@ import { Barber } from '../../core/catalog.service';
 
       <div class="mt-6 border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
         <h3 class="font-medium mb-2">Mi disponibilidad</h3>
-        <div *ngIf="schedules; else loadingSc" class="space-y-4">
-          <div class="grid md:grid-cols-2 gap-4">
-            <div *ngFor="let s of schedules" class="border rounded p-3">
-              <div class="flex items-center gap-2">
-                <select class="border rounded px-2 py-1" [(ngModel)]="s.dayOfWeek">
-                  <option *ngFor="let d of days" [ngValue]="d">{{ d }}</option>
-                </select>
-                <input type="time" class="border rounded px-2 py-1" [(ngModel)]="s.startTime" />
-                <input type="time" class="border rounded px-2 py-1" [(ngModel)]="s.endTime" />
-                <button class="bg-indigo-600 text-white px-3 py-1 rounded" (click)="updateSchedule(s)" [disabled]="updatingScheduleId === s.id">
-                  <span *ngIf="updatingScheduleId !== s.id">Guardar</span>
-                  <span *ngIf="updatingScheduleId === s.id">Guardando…</span>
-                </button>
-                <button class="text-red-600 underline px-2" (click)="deleteSchedule(s)" [disabled]="deletingScheduleId === s.id">
-                  <span *ngIf="deletingScheduleId !== s.id">Eliminar</span>
-                  <span *ngIf="deletingScheduleId === s.id">Eliminando…</span>
-                </button>
-              </div>
-            </div>
-          </div>
+        <div *ngIf="schedules as sc; else loadingSc" class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-600">
+                <th class="px-2 py-2 w-48">Día</th>
+                <th class="px-2 py-2 w-32">Inicio</th>
+                <th class="px-2 py-2 w-32">Fin</th>
+                <th class="px-2 py-2">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <tr *ngFor="let s of sc">
+                <td class="px-2 py-2">
+                  <select class="border rounded px-2 py-1 w-full" [(ngModel)]="s.dayOfWeek">
+                    <option *ngFor="let d of days" [ngValue]="d">{{ d }}</option>
+                  </select>
+                </td>
+                <td class="px-2 py-2">
+                  <input type="time" class="border rounded px-2 py-1 w-full" [(ngModel)]="s.startTime" />
+                </td>
+                <td class="px-2 py-2">
+                  <input type="time" class="border rounded px-2 py-1 w-full" [(ngModel)]="s.endTime" />
+                </td>
+                <td class="px-2 py-2">
+                  <div class="flex items-center gap-2">
+                    <button class="bg-indigo-600 text-white px-3 py-1 rounded" (click)="updateSchedule(s)" [disabled]="updatingScheduleId === s.id">
+                      <span *ngIf="updatingScheduleId !== s.id">Guardar</span>
+                      <span *ngIf="updatingScheduleId === s.id">Guardando…</span>
+                    </button>
+                    <button class="text-red-600 underline" (click)="deleteSchedule(s)" [disabled]="deletingScheduleId === s.id">
+                      <span *ngIf="deletingScheduleId !== s.id">Eliminar</span>
+                      <span *ngIf="deletingScheduleId === s.id">Eliminando…</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-          <div class="border-t pt-4">
+          <div class="border-t mt-4 pt-4">
             <h4 class="font-medium mb-2">Crear nuevo horario</h4>
-            <div class="flex flex-wrap items-center gap-2">
-              <select class="border rounded px-2 py-1" [(ngModel)]="newDay">
+            <div class="grid grid-cols-4 gap-2">
+              <select class="border rounded px-2 py-1 w-full" [(ngModel)]="newDay">
                 <option *ngFor="let d of days" [ngValue]="d">{{ d }}</option>
               </select>
-              <input type="time" class="border rounded px-2 py-1" [(ngModel)]="newStart" />
-              <input type="time" class="border rounded px-2 py-1" [(ngModel)]="newEnd" />
+              <input type="time" class="border rounded px-2 py-1 w-full" [(ngModel)]="newStart" />
+              <input type="time" class="border rounded px-2 py-1 w-full" [(ngModel)]="newEnd" />
               <button class="bg-green-600 text-white px-3 py-1 rounded" (click)="createSchedule()" [disabled]="isCreatingSchedule">
                 <span *ngIf="!isCreatingSchedule">Añadir</span>
                 <span *ngIf="isCreatingSchedule">Creando…</span>
