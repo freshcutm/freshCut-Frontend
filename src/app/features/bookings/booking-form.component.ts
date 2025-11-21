@@ -137,13 +137,17 @@ export class BookingFormComponent implements OnInit {
       this.notifications.error('Debes iniciar sesión como usuario para reservar');
       return;
     }
+    if (!this.service) {
+      this.notifications.warning('Debes seleccionar un servicio antes de reservar');
+      return;
+    }
     this.isSubmitting = true;
     const start = `${this.date}T${this.time}:00`;
-    const duration = this.service?.durationMinutes ?? 30;
+    const duration = this.service.durationMinutes ?? 30;
     const end = this.addMinutesToIso(start, duration);
     const client = this.auth.email() || 'Invitado';
     const barberName = this.barber ? this.barber.name : '';
-    const serviceName = this.service ? this.service.name : '';
+    const serviceName = this.service.name;
     if (new Date(start).getTime() < new Date().getTime()) {
       this.notifications.error('Selecciona una fecha y hora futuras');
       this.isSubmitting = false;

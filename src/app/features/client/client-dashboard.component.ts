@@ -81,17 +81,8 @@ import { NotificationsService } from '../../ui/notifications.service';
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <div class="border rounded p-4 bg-white lg:col-span-1">
-          <h3 class="barber-subtitle font-semibold mb-2">Accesos rápidos</h3>
-          <div class="flex flex-col gap-2 text-sm">
-            <a routerLink="/reservas" class="text-indigo-600 hover:underline">Mis reservas</a>
-            <a routerLink="/reservas/nueva" class="text-indigo-600 hover:underline">Nueva reserva</a>
-            <a routerLink="/servicios" class="text-indigo-600 hover:underline">Explorar servicios</a>
-            <a routerLink="/ia" class="text-indigo-600 hover:underline">Asistente IA</a>
-          </div>
-        </div>
-        <div class="border rounded-xl p-4 backdrop-blur lg:col-span-3 shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
+      <div class="grid grid-cols-1 gap-6 mb-8">
+        <div class="border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
           <div class="flex items-center justify-between mb-2">
             <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">📈</span> Frecuencia de cortes</h3>
             <div class="flex items-center gap-3">
