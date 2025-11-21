@@ -10,6 +10,7 @@ import { AuthService } from '../../core/auth.service';
 import { BarberService, Schedule } from '../../core/barber.service';
 import { NotificationsService } from '../../ui/notifications.service';
 import { ConfirmService } from '../../ui/confirm.service';
+import { ProfileService } from '../../core/profile.service';
 
 @Component({
   selector: 'app-home',
@@ -45,6 +46,7 @@ import { ConfirmService } from '../../ui/confirm.service';
         <ng-template #barberHome>
           <div class="text-center">
             <h1 class="barber-title text-5xl sm:text-6xl font-extrabold tracking-tight mb-4">Panel de barbero</h1>
+            <p class="text-gray-600 mb-2">Bienvenido, <span class="font-medium">{{ barberName || 'barbero' }}</span></p>
             <p class="text-gray-600 mb-8">Gestiona tu perfil, horario y reservas. Este inicio está adaptado a tu rol.</p>
             <div class="flex flex-wrap justify-center gap-3 mb-8">
               <a routerLink="/barbero" class="btn btn-primary w-full sm:w-auto">Ir a editar perfil</a>
@@ -303,7 +305,7 @@ import { ConfirmService } from '../../ui/confirm.service';
             <div class="flex items-center mb-2">
               <h2 class="barber-title text-3xl font-bold">Mi panel</h2>
             </div>
-            <p class="text-sm text-gray-600 mb-6">Bienvenido, <span class="font-medium">{{ auth.email() }}</span></p>
+            <p class="text-sm text-gray-600 mb-6">Bienvenido, <span class="font-medium">{{ userName || auth.email() }}</span></p>
 
             <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-purple-500 text-white p-4 mb-6 shadow">
               <div class="flex items-center gap-3">
@@ -460,8 +462,8 @@ import { ConfirmService } from '../../ui/confirm.service';
               <h2 class="text-2xl font-semibold">Servicios populares</h2>
               <a routerLink="/servicios" class="text-indigo-600 hover:underline">Ver todos los servicios</a>
             </div>
-            <div class="mt-3 bg-white shadow-sm border rounded divide-y" *ngIf="services.length; else noServices">
-              <div class="p-4 flex items-center justify-between" *ngFor="let s of services | slice:0:3">
+            <div class="mt-3 bg-white shadow-sm border rounded divide-y" *ngIf="displayServices.length; else noServices">
+              <div class="p-4 flex items-center justify-between" *ngFor="let s of displayServices | slice:0:3">
                 <div>
                   <div class="font-medium">{{ s.name }}</div>
                   <div class="text-sm text-gray-500">Duración estimada: {{ realDuration(s) }} min • Precio: {{ formatPrice(s.priceCents) }}</div>
@@ -482,6 +484,7 @@ import { ConfirmService } from '../../ui/confirm.service';
 export class HomeComponent implements OnInit {
   barbers: Barber[] = [];
   services: ServiceItem[] = [];
+  displayServices: ServiceItem[] = [];
 
   bookings?: import('../../core/barber.service').Booking[];
   bookingsUpcoming?: import('../../core/barber.service').Booking[];
@@ -511,22 +514,40 @@ export class HomeComponent implements OnInit {
   topClients: { name: string; revenue: number; count: number }[] = [];
   assistantTips: string[] = [];
   private assistantHeadlineLast?: string;
+  userName: string = '';
+  barberName: string = '';
 
-  constructor(private catalog: CatalogService, private currency: CurrencyService, public auth: AuthService, private barber: BarberService, private notifications: NotificationsService, private confirm: ConfirmService, private bookingSvc: BookingService) {}
+  constructor(private catalog: CatalogService, private currency: CurrencyService, public auth: AuthService, private barber: BarberService, private notifications: NotificationsService, private confirm: ConfirmService, private bookingSvc: BookingService, private profile: ProfileService) {}
 
   ngOnInit(): void {
     this.currency.warmup();
     this.catalog.listBarbers().subscribe({ next: bs => this.barbers = bs });
-    this.catalog.listServices().subscribe({ next: ss => this.services = ss });
+    this.catalog.listServices().subscribe({
+      next: ss => {
+        this.services = ss;
+        this.currency.ensureRate().then(rate => {
+          const toCop = (cents: number) => (cents || 0) / 100 * rate;
+          const filtered = ss.filter(s => {
+            const cop = toCop(s.priceCents);
+            return cop >= 20000 && cop <= 40000;
+          });
+          this.displayServices = filtered.length ? filtered : ss;
+        }).catch(() => {
+          this.displayServices = ss;
+        });
+      }
+    });
     if (this.auth.role() === 'BARBER') {
       this.barber.schedules().subscribe({ next: (ss) => { this.schedules = ss; this.computeDerivedFromData(); } });
       this.barber.bookings().subscribe({ next: (bs) => { this.bookings = bs; this.computeViews(); this.computeDerivedFromData(); } });
+      this.barber.me().subscribe({ next: (me) => { this.barberName = me?.name || ''; } });
     }
     if (this.auth.role() === 'USER') {
       this.bookingSvc.my().subscribe({
         next: (data: import('../../core/booking.service').Booking[]) => { this.myBookings = data || []; this.computeAnalytics(); },
         error: () => { this.myBookings = []; this.computeAnalytics(); }
       });
+      this.profile.me().subscribe({ next: (p) => { this.userName = p?.name || ''; } });
     }
   }
 
