@@ -29,7 +29,7 @@ import { NotificationsService } from '../../ui/notifications.service';
         <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
           <div class="bg-white/10 rounded px-3 py-2">
             <div class="text-black">Cortes</div>
-            <div class="text-lg font-bold text-white">{{ totalCuts12m }}</div>
+            <div class="text-lg font-bold text-black">{{ totalCuts12m }}</div>
           </div>
           <div class="bg-white/10 rounded px-3 py-2">
             <div class="text-white">Gasto total</div>
