@@ -577,8 +577,8 @@ export class BarberDashboardComponent implements OnInit {
   }
 
   private lowOccupancySlots(): string {
-    const items = this.weekDays;
-    const lows = items.filter(x => x.occupancyPct < 40).map(x => x.label);
+    const metrics = this.occupancyMetrics || [];
+    const lows = metrics.filter(x => x.pct < 40).map(x => x.day);
     return lows.length ? `en ${lows.join(', ')}` : '';
   }
 
