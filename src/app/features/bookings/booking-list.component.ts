@@ -33,10 +33,10 @@ import { ConfirmService } from '../../ui/confirm.service';
           </div>
           <div class="flex flex-wrap gap-3 items-center justify-start sm:justify-end">
             <span class="text-xs px-2 py-1 rounded" [ngClass]="b.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'">
-              {{ b.status || 'CONFIRMED' }}
+              {{ statusLabel(b) }}
             </span>
-            <a class="text-indigo-600 hover:underline" [routerLink]="['/reservas/editar', b.id]">Editar</a>
-            <button class="text-yellow-700 hover:underline" (click)="cancel(b)" [disabled]="b.status === 'CANCELLED'">Cancelar</button>
+            <a class="text-indigo-600 hover:underline" [routerLink]="['/reservas/editar', b.id]" *ngIf="!isCompleted(b)">Editar</a>
+            <button class="text-yellow-700 hover:underline" (click)="cancel(b)" [disabled]="b.status === 'CANCELLED' || isCompleted(b)">Cancelar</button>
             <button class="text-red-600 hover:underline" (click)="remove(b)">Eliminar</button>
           </div>
         </div>
@@ -73,6 +73,16 @@ export class BookingListComponent implements OnInit {
         }
       });
     }
+  }
+
+  statusLabel(b: Booking): string {
+    const s = (b.status || 'CONFIRMED');
+    if (s === 'CANCELLED') return 'Cancelada';
+    if (this.isCompleted(b)) return 'Realizada';
+    return 'Activa';
+  }
+  isCompleted(b: Booking): boolean {
+    try { return (b.status !== 'CANCELLED') && (new Date(b.endTime).getTime() < Date.now()); } catch { return false; }
   }
 
   async cancel(b: Booking) {

@@ -89,6 +89,12 @@ export class BookingEditComponent implements OnInit {
       next: ({ barbers, services, booking }) => {
         this.barbers = barbers;
         this.services = services;
+        const ended = (() => { try { return new Date(booking.endTime).getTime() < Date.now(); } catch { return false; } })();
+        if (booking?.status === 'CANCELLED' || ended) {
+          this.notifications.warning('Esta reserva ya no puede editarse');
+          this.router.navigateByUrl('/reservas');
+          return;
+        }
         this.initFromBooking(booking);
         this.loaded = true;
       },

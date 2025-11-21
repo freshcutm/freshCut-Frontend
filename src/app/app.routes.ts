@@ -15,6 +15,7 @@ export const routes: Routes = [
   { path: 'reservas/nueva', canActivate: [userGuard], loadComponent: () => import('./features/bookings/booking-form.component').then(c => c.BookingFormComponent) },
   { path: 'reservas/editar/:id', canActivate: [authGuard], loadComponent: () => import('./features/bookings/booking-edit.component').then(c => c.BookingEditComponent) },
   { path: 'ia', loadComponent: () => import('./features/ai/ai-page.component').then(c => c.AiPageComponent) },
+  { path: 'ia/historial', canActivate: [authGuard], loadComponent: () => import('./features/history/recommendation-history.component').then(c => c.RecommendationHistoryComponent) },
   { path: 'admin', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin-dashboard.component').then(c => c.AdminDashboardComponent) },
   { path: 'admin/panel', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin-control.component').then(c => c.AdminControlComponent) },
   { path: 'admin/servicios', canActivate: [adminGuard], loadComponent: () => import('./features/admin/service-list.component').then(c => c.ServiceListComponent) },

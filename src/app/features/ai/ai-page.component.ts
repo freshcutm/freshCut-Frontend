@@ -13,6 +13,7 @@ import { firstValueFrom } from 'rxjs';
   template: `
     <div class="max-w-4xl mx-auto p-8 rounded-2xl bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-800 text-gray-100 border border-neutral-700 shadow-xl grid gap-6">
       <h2 class="barber-title text-3xl sm:text-4xl font-bold tracking-tight text-indigo-400">Asistente IA</h2>
+      <div class="text-xs text-gray-400">Ver historial: <a routerLink="/ia/historial" class="text-indigo-300 hover:underline">Chats guardados</a></div>
       <p class="barber-subtitle text-sm text-gray-300">Sube una foto de tu rostro (cámara o galería). La IA analizará tu foto y te dará recomendaciones de cortes que más te favorecerían y cuidados a seguir, en texto claro y breve.</p>
 
       <div class="grid md:grid-cols-2 gap-4">
@@ -660,8 +661,22 @@ export class AiPageComponent implements OnInit, OnDestroy {
     try {
       const res = await firstValueFrom(this.ai.saveLatestChat());
       if (res && res.id) {
+        if (this.imgFile) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            try { localStorage.setItem('chat_img_' + res.id, String(reader.result || '')); } catch {}
+            this.saveMsg = 'Chat guardado en historial.';
+            setTimeout(() => { this.saveMsg = ''; }, 3000);
+          };
+          reader.readAsDataURL(this.imgFile);
+        } else if (this.imgPreview) {
+          try { localStorage.setItem('chat_img_' + res.id, this.imgPreview); } catch {}
+          this.saveMsg = 'Chat guardado en historial.';
+          setTimeout(() => { this.saveMsg = ''; }, 3000);
+        } else {
         this.saveMsg = 'Chat guardado en historial.';
         setTimeout(() => { this.saveMsg = ''; }, 3000);
+        }
       } else {
         this.saveMsg = 'No se pudo guardar el chat.';
         setTimeout(() => { this.saveMsg = ''; }, 3000);
