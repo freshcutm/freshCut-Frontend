@@ -29,18 +29,18 @@ html, body, input, select, textarea, button {
 
 /* Variables de marca */
 :root {
-  --color-primary: #0A1A2F;
-  --color-secondary: #1E3A56;
-  --color-accent: #D4A857;
-  --color-light-bg: #DFE3E8;
-  --color-navbar: #F5F5F5;
-  --color-dark-text: #1C1C1C;
+  --color-primary: #7A5C3E; /* marrón cálido para hovers y acentos oscuros */
+  --color-secondary: #A1825D; /* beige tostado para botones principales */
+  --color-accent: #D4A857; /* dorado de marca */
+  --color-light-bg: #F5EFE6; /* fondo principal beige */
+  --color-navbar: #F3E9DD; /* barra superior beige más claro */
+  --color-dark-text: #2B2B2B;
   --color-light-text: #FFFFFF;
 
-  --brand-amber: var(--color-primary);
-  --brand-amber-hover: var(--color-secondary);
+  --brand-amber: var(--color-secondary);
+  --brand-amber-hover: var(--color-primary);
   --brand-dark: var(--color-dark-text);
-  --border-neutral: #E0E0E0;
+  --border-neutral: #E5D9C9; /* borde suave acorde al beige */
 }
 
 body {
@@ -74,7 +74,7 @@ body {
 }
 .btn-outline {
   border: 1px solid var(--color-accent);
-  color: var(--color-accent);
+  color: var(--color-primary);
   background-color: transparent;
 }
 .btn-outline:hover {
@@ -125,14 +125,14 @@ body {
 .bg-gray-50 { background-color: var(--color-light-bg) !important; }
 .text-gray-600 { color: var(--color-dark-text) !important; }
 .text-gray-100 { color: var(--color-light-text) !important; }
-.border-gray-300 { border-color: #D0D4DA !important; }
+.border-gray-300 { border-color: var(--border-neutral) !important; }
 .bg-neutral-900 { background-color: var(--color-primary) !important; }
 .border-neutral-700 { border-color: var(--color-secondary) !important; }
 .text-indigo-300 { color: var(--color-secondary) !important; }
 .text-indigo-200 { color: var(--color-secondary) !important; }
 .hover\:text-indigo-300:hover { color: var(--color-secondary) !important; }
-.bg-gray-900\/70 { background-color: var(--color-light-bg) !important; }
-main.bg-gradient-to-b { background-image: linear-gradient(to bottom, #E5E7EB, #F3F4F6) !important; }
+.bg-gray-900\/70 { background-color: var(--color-navbar) !important; }
+main.bg-gradient-to-b { background-image: linear-gradient(to bottom, #F5EFE6, #FFF9F2) !important; }
 
 header.sticky.top-0 { background-color: var(--color-navbar) !important; color: var(--color-dark-text) !important; }
 header.sticky.top-0 a:not(.btn) { color: var(--color-dark-text) !important; }
