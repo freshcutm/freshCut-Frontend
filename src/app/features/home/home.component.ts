@@ -394,22 +394,21 @@ import { ProfileService } from '../../core/profile.service';
                   </div>
                 </div>
               </div>
-              <div class="border rounded-xl p-4 backdrop-blur shadow bg-white/90" *ngIf="myBookings.length >= 3">
+              <div class="border rounded-xl p-4 backdrop-blur shadow bg-white/90" *ngIf="myBookings.length >= 5">
                 <div class="flex items-center justify-between mb-2">
                   <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">🎯</span> Ruleta de descuentos</h3>
                   <div class="text-xs text-gray-600">Gira para obtener 20%–50%</div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                   <div class="flex items-center justify-center">
-                    <div class="relative w-40 h-40 rounded-full" [style.transform]="'rotate(' + wheelAngle + 'deg)'" [style.transition]="spinning ? 'transform 2.2s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none'" [ngStyle]="{ background: 'conic-gradient(#16a34a 0 90deg, #22c55e 90deg 180deg, #84cc16 180deg 270deg, #f59e0b 270deg 360deg)' }">
-                      <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-2 h-16 bg-white rounded"></div>
+                    <div class="relative inline-block">
+                      <div class="w-40 h-40 rounded-full" [style.transform]="'rotate(' + wheelAngle + 'deg)'" [style.transition]="spinning ? 'transform 4.8s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none'" [ngStyle]="{ background: 'conic-gradient(#16a34a 0 90deg, #22c55e 90deg 180deg, #84cc16 180deg 270deg, #f59e0b 270deg 360deg)' }">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                          <div class="text-xs text-gray-700">{{ wheelLabel }}</div>
+                        </div>
                       </div>
-                      <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="text-xs text-gray-700">{{ wheelLabel }}</div>
-                      </div>
+                      <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-[14px] border-l-transparent border-r-transparent border-b-red-500"></div>
                     </div>
-                    <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-[14px] border-l-transparent border-r-transparent border-b-red-500"></div>
                   </div>
                   <div class="space-y-2 text-sm">
                     <div *ngIf="availableCouponPct; else noCoupon">Cupón disponible: <span class="font-semibold">{{ availableCouponPct }}%</span> se aplicará en tu próxima reserva</div>
@@ -417,7 +416,7 @@ import { ProfileService } from '../../core/profile.service';
                       <div>No tienes cupón activo. Gira la ruleta para intentar conseguir uno.</div>
                     </ng-template>
                     <button class="bg-indigo-600 text-white px-3 py-1 rounded" (click)="spinWheel()" [disabled]="spinning">{{ spinning ? 'Girando...' : 'Girar ruleta' }}</button>
-                    <div class="text-xs text-gray-500">Probabilidades: 20% (40%), 30% (30%), 40% (20%), 50% (10%)</div>
+                    <div class="text-xs text-gray-500">Probabilidades: 20% (~50%), 30% (~30%), 40% (~15%), 50% (~5%)</div>
                   </div>
                 </div>
               </div>
@@ -1035,20 +1034,20 @@ export class HomeComponent implements OnInit {
   spinWheel() {
     if (this.spinning) return;
     const weights: { pct: number; w: number; angle: number; label: string }[] = [
-      { pct: 20, w: 0.4, angle: 45, label: '20%' },
+      { pct: 20, w: 0.5, angle: 45, label: '20%' },
       { pct: 30, w: 0.3, angle: 135, label: '30%' },
-      { pct: 40, w: 0.2, angle: 225, label: '40%' },
-      { pct: 50, w: 0.1, angle: 315, label: '50%' }
+      { pct: 40, w: 0.15, angle: 225, label: '40%' },
+      { pct: 50, w: 0.05, angle: 315, label: '50%' }
     ];
     const r = Math.random();
     let acc = 0;
     let chosen = weights[0];
     for (const opt of weights) { acc += opt.w; if (r <= acc) { chosen = opt; break; } }
     this.spinning = true;
-    const turns = 720;
+    const turns = 1440;
     this.wheelLabel = '';
     this.wheelAngle = turns + chosen.angle;
-    setTimeout(() => { this.spinning = false; this.wheelLabel = chosen.label; this.availableCouponPct = chosen.pct; this.persistCoupon(chosen.pct); }, 2300);
+    setTimeout(() => { this.spinning = false; this.wheelLabel = chosen.label; this.availableCouponPct = chosen.pct; this.persistCoupon(chosen.pct); }, 4800);
   }
   private monthShort(d: Date): string { return new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(d); }
   barHeight(n: number): string { const max = Math.max(...this.monthlyCuts, 1); const h = Math.round((n / max) * 140) + 20; return h + 'px'; }
