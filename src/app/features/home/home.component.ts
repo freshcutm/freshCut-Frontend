@@ -60,19 +60,19 @@ import { ProfileService } from '../../core/profile.service';
               </div>
               <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <div class="bg-white/10 rounded px-3 py-2">
-                  <div class="text-indigo-200">Ocupación</div>
+                  <div class="text-white">Ocupación</div>
                   <div class="text-lg font-bold">{{ weeklyOccupancyPct }}%</div>
                 </div>
                 <div class="bg-white/10 rounded px-3 py-2">
-                  <div class="text-indigo-200">Proyección</div>
+                  <div class="text-white">Proyección</div>
                   <div class="text-lg font-bold">{{ formatCOPCents(projectedIncome) }}</div>
                 </div>
                 <div class="bg-white/10 rounded px-3 py-2">
-                  <div class="text-indigo-200">Delta mensual</div>
+                  <div class="text-white">Delta mensual</div>
                   <div class="text-lg font-bold">{{ currentVsPrevDelta }}%</div>
                 </div>
                 <div class="bg-white/10 rounded px-3 py-2">
-                  <div class="text-indigo-200">Cancelaciones</div>
+                  <div class="text-white">Cancelaciones</div>
                   <div class="text-lg font-bold">{{ cancelRate }}%</div>
                 </div>
               </div>

@@ -11,71 +11,71 @@ import { firstValueFrom } from 'rxjs';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="max-w-4xl mx-auto p-8 rounded-2xl bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-800 text-gray-100 border border-neutral-700 shadow-xl grid gap-6">
-      <h2 class="barber-title text-3xl sm:text-4xl font-bold tracking-tight text-indigo-400">Asistente IA</h2>
-      <div class="text-xs text-gray-400">Ver historial: <a routerLink="/ia/historial" class="text-indigo-300 hover:underline">Chats guardados</a></div>
-      <p class="barber-subtitle text-sm text-gray-300">Sube una foto de tu rostro (cámara o galería). La IA analizará tu foto y te dará recomendaciones de cortes que más te favorecerían y cuidados a seguir, en texto claro y breve.</p>
+    <div class="max-w-4xl mx-auto p-8 rounded-2xl bg-white text-gray-900 border border-gray-300 shadow-xl grid gap-6">
+      <h2 class="barber-title text-3xl sm:text-4xl font-bold tracking-tight text-gray-800">Asistente IA</h2>
+      <div class="text-xs text-gray-600">Ver historial: <a routerLink="/ia/historial" class="text-indigo-600 hover:underline">Chats guardados</a></div>
+      <p class="barber-subtitle text-sm text-gray-700">Sube una foto de tu rostro (cámara o galería). La IA analizará tu foto y te dará recomendaciones de cortes que más te favorecerían y cuidados a seguir, en texto claro y breve.</p>
 
       <div class="grid md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1 text-gray-300">Foto del rostro</label>
+          <label class="block text-sm font-medium mb-1 text-gray-700">Foto del rostro</label>
           <div class="flex items-center gap-2 mt-1">
-            <label class="text-xs text-gray-400">Cámara:</label>
-            <select [(ngModel)]="selectedFacing" name="facing" (change)="onFacingChange()" class="bg-neutral-800 border border-neutral-700 rounded px-2 py-2 text-sm text-gray-100">
+            <label class="text-xs text-gray-600">Cámara:</label>
+            <select [(ngModel)]="selectedFacing" name="facing" (change)="onFacingChange()" class="bg-white border border-gray-300 rounded px-2 py-2 text-sm text-gray-800">
               <option value="user">Frontal (selfie)</option>
               <option value="environment">Trasera (entorno)</option>
             </select>
           </div>
-          <input type="file" accept="image/*" [attr.capture]="selectedFacing" (change)="onImageSelected($event)" class="mt-2 w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="file" accept="image/*" [attr.capture]="selectedFacing" (change)="onImageSelected($event)" class="mt-2 w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           <div class="mt-2">
-            <button type="button" (click)="startCamera()" [disabled]="cameraOn" class="mt-2 border border-neutral-600 px-3 py-2 rounded hover:bg-neutral-800 disabled:opacity-50">Usar cámara</button>
+            <button type="button" (click)="startCamera()" [disabled]="cameraOn" class="mt-2 border border-gray-300 px-3 py-2 rounded hover:bg-gray-100 disabled:opacity-50">Usar cámara</button>
           </div>
           <div class="mt-3" *ngIf="cameraOn">
             <div class="relative">
-              <video #video autoplay playsinline class="w-full max-h-64 rounded-lg border border-neutral-700" [style.transform]="selectedFacing==='user' ? 'scaleX(-1)' : 'none'"></video>
+              <video #video autoplay playsinline class="w-full max-h-64 rounded-lg border border-gray-300" [style.transform]="selectedFacing==='user' ? 'scaleX(-1)' : 'none'"></video>
               <div *ngIf="countingDown" class="absolute inset-0 flex items-center justify-center bg-black/40">
                 <div class="text-white text-4xl font-bold">{{ countdown }}</div>
               </div>
             </div>
             <div class="flex items-center gap-3 mt-2 flex-wrap">
               <button type="button" (click)="takeSnapshot()" class="btn btn-outline">Tomar foto</button>
-              <button type="button" (click)="takeSnapshotWithCountdown()" class="border border-neutral-600 px-3 py-2 rounded hover:bg-neutral-800">Foto en 3s</button>
-              <button type="button" (click)="stopCamera()" class="border border-neutral-600 px-3 py-2 rounded hover:bg-neutral-800">Cerrar cámara</button>
-              <button type="button" (click)="switchFacing()" class="border border-neutral-600 px-3 py-2 rounded hover:bg-neutral-800">Cambiar a {{ selectedFacing === 'user' ? 'trasera' : 'frontal' }}</button>
-              <button *ngIf="torchAvailable" type="button" (click)="toggleTorch()" class="border border-neutral-600 px-3 py-2 rounded hover:bg-neutral-800">{{ torchOn ? 'Apagar linterna' : 'Encender linterna' }}</button>
+              <button type="button" (click)="takeSnapshotWithCountdown()" class="border border-gray-300 px-3 py-2 rounded hover:bg-gray-100">Foto en 3s</button>
+              <button type="button" (click)="stopCamera()" class="border border-gray-300 px-3 py-2 rounded hover:bg-gray-100">Cerrar cámara</button>
+              <button type="button" (click)="switchFacing()" class="border border-gray-300 px-3 py-2 rounded hover:bg-gray-100">Cambiar a {{ selectedFacing === 'user' ? 'trasera' : 'frontal' }}</button>
+              <button *ngIf="torchAvailable" type="button" (click)="toggleTorch()" class="border border-gray-300 px-3 py-2 rounded hover:bg-gray-100">{{ torchOn ? 'Apagar linterna' : 'Encender linterna' }}</button>
               <div *ngIf="devices.length > 0" class="flex items-center gap-2">
-                <label class="text-xs text-gray-400">Dispositivo:</label>
-                <select [ngModel]="selectedDeviceId ?? ''" (change)="onDeviceChange($event)" class="bg-neutral-800 border border-neutral-700 rounded px-2 py-2 text-sm text-gray-100">
+                <label class="text-xs text-gray-600">Dispositivo:</label>
+                <select [ngModel]="selectedDeviceId ?? ''" (change)="onDeviceChange($event)" class="bg-white border border-gray-300 rounded px-2 py-2 text-sm text-gray-800">
                   <option value="">Auto</option>
                   <option *ngFor="let d of devices" [value]="d.deviceId">{{ d.label || ('Cámara ' + (d?.deviceId ? (d.deviceId | slice:0:6) : '---')) }}</option>
                 </select>
                 <button type="button" (click)="refreshDevices()" class="text-xs underline">Refrescar</button>
               </div>
-              <div class="text-xs text-gray-400">Luz: <span class="font-medium text-indigo-300">{{ lightHint }}</span> ({{ lightLevel }}%)</div>
+              <div class="text-xs text-gray-600">Luz: <span class="font-medium text-indigo-600">{{ lightHint }}</span> ({{ lightLevel }}%)</div>
             </div>
           </div>
           <canvas #snapshotCanvas class="hidden"></canvas>
           <div class="mt-3" *ngIf="imgPreview">
-            <div class="text-xs text-gray-400 mb-1">Previsualización</div>
-            <div class="bg-neutral-800 border border-neutral-700 rounded p-3">
+            <div class="text-xs text-gray-600 mb-1">Previsualización</div>
+            <div class="bg-white border border-gray-300 rounded p-3">
               <img [src]="imgPreview" alt="Previsualización" class="max-h-64 rounded" />
             </div>
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1 text-gray-300">Notas (obligatorio)</label>
-          <textarea [(ngModel)]="notes" name="notes" rows="6" required [attr.aria-required]="true" class="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: frente amplia, pómulos marcados, evitar peinados muy altos"></textarea>
+          <label class="block text-sm font-medium mb-1 text-gray-700">Notas (obligatorio)</label>
+          <textarea [(ngModel)]="notes" name="notes" rows="6" required [attr.aria-required]="true" class="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: frente amplia, pómulos marcados, evitar peinados muy altos"></textarea>
           <div class="mt-2 flex items-center gap-2">
-            <input id="autoMode" type="checkbox" [(ngModel)]="autoMode" name="autoMode" class="accent-indigo-500" />
-            <label for="autoMode" class="text-sm text-gray-300">Generar recomendaciones automáticamente</label>
+            <input id="autoMode" type="checkbox" [(ngModel)]="autoMode" name="autoMode" class="accent-indigo-600" />
+            <label for="autoMode" class="text-sm text-gray-700">Generar recomendaciones automáticamente</label>
           </div>
           <div class="flex flex-wrap gap-2 mt-3">
             <button (click)="generateRecommendations()" [disabled]="textLoading || !(notes && notes.trim())" class="btn btn-outline w-full sm:w-auto">
               {{ textLoading ? 'Generando...' : 'Generar recomendaciones con IA' }}
             </button>
             <button (click)="clearImage()" class="btn btn-muted w-full sm:w-auto">Limpiar</button>
-            <div *ngIf="textLoading" class="flex items-center gap-2 text-xs text-gray-300">
-              <span class="inline-block w-4 h-4 border-2 border-neutral-500 border-t-indigo-500 rounded-full animate-spin"></span>
+            <div *ngIf="textLoading" class="flex items-center gap-2 text-xs text-gray-700">
+              <span class="inline-block w-4 h-4 border-2 border-gray-400 border-t-indigo-600 rounded-full animate-spin"></span>
               <span>Procesando foto y notas...</span>
             </div>
           </div>
@@ -84,61 +84,61 @@ import { firstValueFrom } from 'rxjs';
 
 
       <div class="mt-4" *ngIf="recommendations">
-        <h3 class="barber-title text-xl font-semibold mb-2">Recomendaciones IA</h3>
+        <h3 class="barber-title text-xl font-semibold mb-2 text-gray-800">Recomendaciones IA</h3>
         <div class="grid gap-3">
-          <div class="bg-neutral-900 border border-neutral-700 border-l-4 border-l-indigo-500 rounded p-4 shadow-sm">
-            <div class="text-sm text-indigo-400 font-semibold mb-1 flex items-center gap-2">
-              <svg class="w-5 h-5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <div class="bg-white border border-gray-300 border-l-4 border-l-indigo-500 rounded p-4 shadow-sm">
+            <div class="text-sm text-gray-800 font-semibold mb-1 flex items-center gap-2">
+              <svg class="w-5 h-5 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="9"></circle>
                 <path d="M9 12l2 2 4-4"></path>
               </svg>
               Opciones recomendadas
             </div>
-            <ul class="pl-1 text-sm text-gray-100">
+            <ul class="pl-1 text-sm text-gray-800">
               <li *ngFor="let opt of optionsList" class="flex items-start gap-2 py-0.5">
-                <svg class="w-5 h-5 mt-0.5 text-indigo-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg class="w-5 h-5 mt-0.5 text-indigo-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M5 12l5 5L19 7"></path>
                 </svg>
                 <span>{{ opt }}</span>
               </li>
             </ul>
           </div>
-          <div class="bg-neutral-900 border border-neutral-700 border-l-4 border-l-indigo-500 rounded p-4 shadow-sm" *ngIf="maintenanceText">
-            <div class="text-sm text-indigo-400 font-semibold mb-1 flex items-center gap-2">
-              <svg class="w-5 h-5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <div class="bg-white border border-gray-300 border-l-4 border-l-indigo-500 rounded p-4 shadow-sm" *ngIf="maintenanceText">
+            <div class="text-sm text-gray-800 font-semibold mb-1 flex items-center gap-2">
+              <svg class="w-5 h-5 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="6" y="4" width="12" height="16" rx="2"></rect>
                 <path d="M9 4h6v2H9z"></path>
               </svg>
               Mantenimiento
             </div>
-            <p class="text-sm text-gray-100">{{ maintenanceText }}</p>
+            <p class="text-sm text-gray-800">{{ maintenanceText }}</p>
           </div>
-          <div class="bg-neutral-900 border border-red-500/30 border-l-4 border-l-red-500 rounded p-4 shadow-sm" *ngIf="avoidText">
-            <div class="text-sm text-red-500 font-semibold mb-1 flex items-center gap-2">
-              <svg class="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <div class="bg-white border border-red-500/30 border-l-4 border-l-red-500 rounded p-4 shadow-sm" *ngIf="avoidText">
+            <div class="text-sm text-red-600 font-semibold mb-1 flex items-center gap-2">
+              <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M12 3l9 16H3l9-16z"></path>
                 <path d="M12 9v4"></path>
                 <path d="M12 17h.01"></path>
               </svg>
               No recomendado
             </div>
-            <p class="text-sm text-gray-100">{{ avoidText }}</p>
+            <p class="text-sm text-gray-800">{{ avoidText }}</p>
           </div>
           <div class="flex items-center gap-2 mt-3">
             <button type="button" (click)="doSaveChat()" class="btn btn-outline">Guardar chat</button>
-            <span *ngIf="saveMsg" class="text-xs text-green-400">{{ saveMsg }}</span>
+            <span *ngIf="saveMsg" class="text-xs text-green-700">{{ saveMsg }}</span>
           </div>
         </div>
       </div>
 
       <div class="mt-4" *ngIf="errorMsg">
-         <div class="text-red-400 text-sm">{{ errorMsg }}</div>
+         <div class="text-red-600 text-sm">{{ errorMsg }}</div>
        </div>
       <div class="mt-2" *ngIf="textErrorMsg">
-         <div class="text-red-400 text-sm">{{ textErrorMsg }}</div>
+         <div class="text-red-600 text-sm">{{ textErrorMsg }}</div>
        </div>
-      <div *ngIf="loading" class="mt-2 flex items-center gap-2 text-xs text-gray-300">
-        <span class="inline-block w-4 h-4 border-2 border-neutral-500 border-t-indigo-500 rounded-full animate-spin"></span>
+      <div *ngIf="loading" class="mt-2 flex items-center gap-2 text-xs text-gray-700">
+        <span class="inline-block w-4 h-4 border-2 border-gray-400 border-t-indigo-600 rounded-full animate-spin"></span>
         <span>Generando imagen...</span>
       </div>
     </div>
