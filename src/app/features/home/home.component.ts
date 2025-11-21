@@ -402,14 +402,8 @@ import { ProfileService } from '../../core/profile.service';
                   <div class="flex items-center justify-center">
                     <div class="relative inline-block">
                       <div class="w-40 h-40 rounded-full" [style.transform]="'rotate(' + wheelAngle + 'deg)'" [style.transition]="spinning ? 'transform 4.8s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none'" [ngStyle]="{ background: 'conic-gradient(#16a34a 0 90deg, #22c55e 90deg 180deg, #84cc16 180deg 270deg, #f59e0b 270deg 360deg)' }">
-                        <div class="absolute inset-0">
-                          <div class="absolute left-1/2 top-1/2 text-[11px] font-semibold text-white drop-shadow" [style.transform]="'translate(-50%, -50%) rotate(45deg) translateY(-60px) rotate(-45deg)'">20%</div>
-                          <div class="absolute left-1/2 top-1/2 text-[11px] font-semibold text-white drop-shadow" [style.transform]="'translate(-50%, -50%) rotate(135deg) translateY(-60px) rotate(-135deg)'">30%</div>
-                          <div class="absolute left-1/2 top-1/2 text-[11px] font-semibold text-white drop-shadow" [style.transform]="'translate(-50%, -50%) rotate(225deg) translateY(-60px) rotate(-225deg)'">40%</div>
-                          <div class="absolute left-1/2 top-1/2 text-[11px] font-semibold text-white drop-shadow" [style.transform]="'translate(-50%, -50%) rotate(315deg) translateY(-60px) rotate(-315deg)'">50%</div>
-                        </div>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                          <div class="text-xs text-gray-800 bg-white/70 px-2 py-1 rounded">{{ wheelLabel }}</div>
+                        <div class="absolute inset-0 flex items-center justify-center" *ngIf="wheelLabel">
+                          <div class="text-xs text-gray-800 bg-white/80 px-2 py-1 rounded">{{ wheelLabel }}</div>
                         </div>
                       </div>
                       <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-[14px] border-l-transparent border-r-transparent border-b-red-500"></div>
