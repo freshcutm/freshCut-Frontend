@@ -38,7 +38,6 @@ import { ProfileService } from '../../core/profile.service';
               <a routerLink="/reservas" class="btn btn-primary w-full sm:w-auto">Reservar ahora</a>
               <a routerLink="/ia" class="btn btn-outline w-full sm:w-auto">Probar asistente IA</a>
               <a routerLink="/auth/register" class="btn btn-outline w-full sm:w-auto">Crear cuenta</a>
-              <a routerLink="/home" class="btn btn-outline w-full sm:w-auto">Ir a mi panel</a>
             </div>
           </div>
         </ng-template>
