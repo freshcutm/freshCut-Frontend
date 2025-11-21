@@ -36,12 +36,196 @@ import { ConfirmService } from '../../ui/confirm.service';
             <h1 class="barber-title text-5xl sm:text-6xl font-extrabold tracking-tight mb-4">Panel de barbero</h1>
             <p class="text-gray-600 mb-8">Gestiona tu perfil, horario y reservas. Este inicio está adaptado a tu rol.</p>
             <div class="flex flex-wrap justify-center gap-3 mb-8">
-              <a routerLink="/barbero" class="btn btn-primary w-full sm:w-auto">Ir a mi panel</a>
+              <a routerLink="/barbero" class="btn btn-primary w-full sm:w-auto">Ir a editar perfil</a>
               <a routerLink="/reservas" class="btn btn-outline w-full sm:w-auto">Ver mis reservas</a>
-              <a routerLink="/perfil" class="btn btn-outline w-full sm:w-auto">Editar perfil</a>
             </div>
 
-            <div class="border rounded-xl p-4 bg-white shadow">
+            <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-purple-500 text-white p-4 mb-6 shadow">
+              <div class="flex items-center gap-3">
+                <div class="text-2xl">💼</div>
+                <div class="font-semibold">Resumen de negocio</div>
+                <span class="ml-auto text-sm">Semana actual</span>
+              </div>
+              <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div class="bg-white/10 rounded px-3 py-2">
+                  <div class="text-indigo-200">Ocupación</div>
+                  <div class="text-lg font-bold">{{ weeklyOccupancyPct }}%</div>
+                </div>
+                <div class="bg-white/10 rounded px-3 py-2">
+                  <div class="text-indigo-200">Proyección</div>
+                  <div class="text-lg font-bold">{{ formatCOPCents(projectedIncome) }}</div>
+                </div>
+                <div class="bg-white/10 rounded px-3 py-2">
+                  <div class="text-indigo-200">Delta mensual</div>
+                  <div class="text-lg font-bold">{{ currentVsPrevDelta }}%</div>
+                </div>
+                <div class="bg-white/10 rounded px-3 py-2">
+                  <div class="text-indigo-200">Cancelaciones</div>
+                  <div class="text-lg font-bold">{{ cancelRate }}%</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="lg:col-span-2 border rounded-xl p-4 bg-white">
+                <h3 class="font-medium mb-2">Mis reservas</h3>
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                  <span class="text-xs text-gray-600">Filtro:</span>
+                  <select class="border rounded px-2 py-1 text-sm" [(ngModel)]="viewFilter">
+                    <option [ngValue]="'UPCOMING'">Próximas</option>
+                    <option [ngValue]="'HISTORY'">Historial</option>
+                    <option [ngValue]="'ALL'">Todas</option>
+                  </select>
+                  <button class="text-xs underline" (click)="refreshBookings()">Actualizar</button>
+                </div>
+                <div *ngIf="bookings; else loadingBk" class="overflow-x-auto -mx-4 sm:mx-0 rounded-xl border shadow-sm">
+                  <table class="min-w-full text-sm">
+                    <thead>
+                      <tr class="text-left">
+                        <th class="py-2 pr-4">Cliente</th>
+                        <th class="py-2 pr-4">Servicio</th>
+                        <th class="py-2 pr-4">Inicio</th>
+                        <th class="py-2 pr-4">Fin</th>
+                        <th class="py-2 pr-4">Estado</th>
+                        <th class="py-2 pr-4">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                      <tr *ngFor="let b of filteredBookings" class="odd:bg-white even:bg-gray-50">
+                        <td class="py-2 pr-4">{{ b.clientName }}</td>
+                        <td class="py-2 pr-4">{{ b.service }}</td>
+                        <td class="py-2 pr-4">{{ formatDate(b.startTime) }}</td>
+                        <td class="py-2 pr-4">{{ formatDate(b.endTime) }}</td>
+                        <td class="py-2 pr-4">{{ b.status || 'CONFIRMED' }}</td>
+                        <td class="py-2 pr-4">
+                          <button *ngIf="canCancel(b)" (click)="cancelBooking(b)" class="text-red-600 underline" [disabled]="actionBookingId === b.id">
+                            <span *ngIf="actionBookingId !== b.id">Cancelar</span>
+                            <span *ngIf="actionBookingId === b.id">Cancelando…</span>
+                          </button>
+                          <button *ngIf="canComplete(b)" (click)="completeBooking(b)" class="ml-3 text-green-700 underline" [disabled]="actionBookingId === b.id">
+                            <span *ngIf="actionBookingId !== b.id">Completar</span>
+                            <span *ngIf="actionBookingId === b.id">Completando…</span>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ng-template #loadingBk>
+                  <div class="text-sm text-gray-500">Cargando reservas…</div>
+                </ng-template>
+              </div>
+              <div class="border rounded-xl p-4 bg-white">
+                <h3 class="font-medium mb-2">Ocupación diaria</h3>
+                <div class="space-y-2">
+                  <div class="grid grid-cols-7 gap-2 mb-3">
+                    <div *ngFor="let m of occupancyMetrics" class="flex flex-col items-center gap-1">
+                      <div class="text-[11px] text-gray-600">{{ m.day }}</div>
+                      <div class="relative w-16 h-16 rounded-full" [ngStyle]="ringStyle(m.pct, '#10b981')">
+                        <div class="absolute inset-2 rounded-full bg-white"></div>
+                        <div class="absolute inset-0 flex items-center justify-center text-xs font-semibold">{{ m.pct }}%</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div *ngFor="let m of occupancyMetrics" class="flex items-center justify-between text-sm">
+                    <div>{{ m.day }}</div>
+                    <div class="font-medium">{{ m.pct }}%</div>
+                  </div>
+                  <div class="mt-2 text-xs text-gray-500">Picos: {{ peakHoursText }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div class="border rounded p-4 bg-white">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">🗓️</span> Calendario inteligente (semana)</h3>
+                  <div class="text-xs text-gray-600">Ocupación semanal: {{ weeklyOccupancyPct }}%</div>
+                </div>
+                <div class="grid grid-cols-7 gap-2 mb-2">
+                  <div *ngFor="let d of weekDays" class="text-xs text-gray-700 text-center font-medium bg-gray-50 rounded py-1">{{ d.label }}</div>
+                </div>
+                <div class="grid grid-cols-7 gap-2">
+                  <div *ngFor="let d of weekDays" class="border rounded-lg p-2 h-40 overflow-hidden relative bg-white">
+                    <div class="absolute inset-0" [ngStyle]="{ background: d.available > 0 ? 'linear-gradient(to top, rgba(16,185,129,0.15) ' + d.occupancyPct + '%, transparent ' + d.occupancyPct + '%)' : 'transparent' }"></div>
+                    <div class="absolute inset-x-0 bottom-0 bg-emerald-300/30" [style.height]="d.occupancyPct + '%'" [style.transition]="'height 500ms ease'"></div>
+                    <div class="relative z-10">
+                      <div class="text-[10px] text-gray-500 mb-1">Ocupación: {{ d.occupancyPct }}%</div>
+                      <div class="space-y-1">
+                        <div *ngFor="let b of d.items" class="text-[11px] px-2 py-1 rounded bg-indigo-50 text-indigo-700 truncate">{{ timeShort(b.startTime) }} • {{ b.clientName }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-600">Huecos disponibles marcados en verde suave.</div>
+              </div>
+              <div class="border rounded p-4 bg-white">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">📆</span> Calendario mensual</h3>
+                  <div class="flex items-center gap-2 text-xs text-gray-600">
+                    <button class="underline" (click)="prevMonth()">Anterior</button>
+                    <div>{{ monthName(monthCursor) }}</div>
+                    <button class="underline" (click)="nextMonth()">Siguiente</button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-7 gap-2 text-xs text-gray-700 font-medium mb-2">
+                  <div *ngFor="let w of ['L','M','X','J','V','S','D']" class="text-center">{{ w }}</div>
+                </div>
+                <div class="grid grid-cols-7 gap-2">
+                  <div *ngFor="let d of monthDays" class="border rounded-lg p-2 h-24 relative cursor-pointer bg-white hover:bg-indigo-50/40 transition" (click)="openDay(d.date)">
+                    <div class="flex items-center justify-between text-[11px] text-gray-600">
+                      <span>{{ d.date.getDate() }}</span>
+                      <span>{{ d.occupancyPct }}%</span>
+                    </div>
+                    <div class="mt-1 text-[11px]" [ngClass]="d.occupancyPct < 40 ? 'text-amber-700' : 'text-green-700'">{{ d.items.length }} cita(s)</div>
+                    <div class="absolute inset-x-0 bottom-1 h-1 rounded" [ngClass]="d.occupancyPct < 40 ? 'bg-amber-300' : 'bg-emerald-300'" [style.width]="d.occupancyPct + '%'" [style.transition]="'width 400ms ease'"></div>
+                  </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-600">Pulsa un día para ver detalles en la tabla de reservas.
+                  <button *ngIf="focusDate" class="ml-2 underline" (click)="clearFocus()">Quitar filtro</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="border rounded-xl p-4 bg-white lg:col-span-2">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">💰</span> Ingresos mensuales</h3>
+                  <div class="text-xs text-gray-600">Actual vs anterior: {{ currentVsPrevDelta }}%</div>
+                </div>
+                <div class="h-36 flex items-end gap-1">
+                  <div *ngFor="let m of earningsMonths; let i = index" class="flex-1 relative" [style.height]="earnBarHeight(earningsValues[i])" [style.transition]="'height 500ms ease'" [ngClass]="earnBarColor(earningsValues[i])">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-700">{{ formatCOPCents(earningsValues[i]) }}</div>
+                    <div class="text-[10px] text-gray-600 text-center mt-1">{{ m }}</div>
+                  </div>
+                </div>
+                <div class="mt-3 grid grid-cols-3 gap-3 text-sm">
+                  <div class="border rounded p-2">
+                    <div class="text-gray-600">Proyección</div>
+                    <div class="font-bold">{{ formatCOPCents(projectedIncome) }}</div>
+                  </div>
+                  <div class="border rounded p-2">
+                    <div class="text-gray-600">Servicio destacado</div>
+                    <div class="font-bold">{{ topService?.name || '—' }}</div>
+                  </div>
+                  <div class="border rounded p-2">
+                    <div class="text-gray-600">Cancelaciones</div>
+                    <div class="font-bold">{{ cancelRate }}%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="border rounded-xl p-4 bg-white">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="text-xl">🧠</div>
+                  <h3 class="barber-subtitle font-semibold">Asistente</h3>
+                </div>
+                <ul class="text-sm list-disc pl-5 space-y-1">
+                  <li *ngFor="let s of assistantTips">{{ s }}</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="border rounded-xl p-4 bg-white shadow mt-6">
               <h3 class="font-medium mb-2">Mi disponibilidad</h3>
               <div *ngIf="schedules as sc; else loadingSc" class="overflow-x-auto">
                 <table class="min-w-full text-sm">
@@ -136,6 +320,12 @@ export class HomeComponent implements OnInit {
   barbers: Barber[] = [];
   services: ServiceItem[] = [];
 
+  bookings?: import('../../core/barber.service').Booking[];
+  bookingsUpcoming?: import('../../core/barber.service').Booking[];
+  bookingsHistory?: import('../../core/barber.service').Booking[];
+  viewFilter: 'UPCOMING' | 'HISTORY' | 'ALL' = 'UPCOMING';
+  actionBookingId?: string | number;
+
   schedules?: Schedule[];
   updatingScheduleId?: string | number;
   deletingScheduleId?: string | number;
@@ -144,6 +334,20 @@ export class HomeComponent implements OnInit {
   newDay: string = 'MONDAY';
   newStart: string = '09:00';
   newEnd: string = '17:00';
+  monthCursor: Date = new Date();
+  focusDate?: Date;
+  weeklyOccupancyPct = 0;
+  occupancyMetrics: { day: string; pct: number }[] = [];
+  peakHoursText = '';
+  earningsMonths: string[] = [];
+  earningsValues: number[] = [];
+  projectedIncome = 0;
+  topService?: { name: string; revenue: number };
+  cancelRate = 0;
+  currentVsPrevDelta = 0;
+  topClients: { name: string; revenue: number; count: number }[] = [];
+  assistantTips: string[] = [];
+  private assistantHeadlineLast?: string;
 
   constructor(private catalog: CatalogService, private currency: CurrencyService, public auth: AuthService, private barber: BarberService, private notifications: NotificationsService, private confirm: ConfirmService) {}
 
@@ -152,7 +356,8 @@ export class HomeComponent implements OnInit {
     this.catalog.listBarbers().subscribe({ next: bs => this.barbers = bs });
     this.catalog.listServices().subscribe({ next: ss => this.services = ss });
     if (this.auth.role() === 'BARBER') {
-      this.barber.schedules().subscribe({ next: (ss) => this.schedules = ss });
+      this.barber.schedules().subscribe({ next: (ss) => { this.schedules = ss; this.computeDerivedFromData(); } });
+      this.barber.bookings().subscribe({ next: (bs) => { this.bookings = bs; this.computeViews(); this.computeDerivedFromData(); } });
     }
   }
 
@@ -164,6 +369,85 @@ export class HomeComponent implements OnInit {
     return realDurationMinutes(s.name, s.durationMinutes);
   }
 
+  get filteredBookings() {
+    const base = (() => {
+      switch (this.viewFilter) {
+        case 'UPCOMING': return this.bookingsUpcoming || [];
+        case 'HISTORY': return this.bookingsHistory || [];
+        default: return this.bookings || [];
+      }
+    })();
+    if (!this.focusDate) return base;
+    return base.filter(b => {
+      const d = new Date(b.startTime);
+      return this.sameDay(d, this.focusDate as Date);
+    });
+  }
+
+  formatCOPCents(cents: number) {
+    return this.currency.formatEurosCentsToCOP(cents || 0);
+  }
+
+  formatDate(dt: string) {
+    try {
+      const d = new Date(dt);
+      return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } catch { return dt; }
+  }
+
+  private computeViews() {
+    const now = new Date();
+    const all = this.bookings || [];
+    this.bookingsUpcoming = all.filter(b => {
+      const end = new Date(b.endTime);
+      const status = (b.status || 'CONFIRMED');
+      return status !== 'CANCELLED' && status !== 'COMPLETED' && end >= now;
+    });
+    this.bookingsHistory = all.filter(b => {
+      const end = new Date(b.endTime);
+      const status = (b.status || 'CONFIRMED');
+      return (status === 'CANCELLED' || status === 'COMPLETED') || end < now;
+    });
+  }
+
+  refreshBookings() {
+    this.barber.bookings().subscribe({ next: (bs) => { this.bookings = bs; this.computeViews(); this.computeDerivedFromData(); } });
+  }
+
+  canCancel(b: import('../../core/barber.service').Booking): boolean {
+    const start = new Date(b.startTime);
+    const status = (b.status || 'CONFIRMED');
+    return status !== 'CANCELLED' && start > new Date();
+  }
+
+  async cancelBooking(b: import('../../core/barber.service').Booking) {
+    if (!b.id) return;
+    const ok = await this.confirm.confirm({ message: '¿Cancelar esta reserva?', confirmText: 'Sí, cancelar', cancelText: 'No' });
+    if (!ok) return;
+    this.actionBookingId = b.id;
+    this.barber.cancelBooking(b.id).subscribe({
+      next: () => { this.refreshBookings(); this.notifications.success('Reserva cancelada'); this.actionBookingId = undefined; },
+      error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo cancelar la reserva'); this.actionBookingId = undefined; }
+    });
+  }
+
+  canComplete(b: import('../../core/barber.service').Booking): boolean {
+    const start = new Date(b.startTime);
+    const status = (b.status || 'CONFIRMED');
+    return status !== 'CANCELLED' && status !== 'COMPLETED' && start <= new Date();
+  }
+
+  async completeBooking(b: import('../../core/barber.service').Booking) {
+    if (!b.id) return;
+    const ok = await this.confirm.confirm({ message: '¿Marcar esta reserva como completada?', confirmText: 'Sí, completar', cancelText: 'No' });
+    if (!ok) return;
+    this.actionBookingId = b.id;
+    this.barber.completeBooking(b.id).subscribe({
+      next: () => { this.refreshBookings(); this.notifications.success('Reserva marcada como completada'); this.actionBookingId = undefined; },
+      error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo completar la reserva'); this.actionBookingId = undefined; }
+    });
+  }
+
   createSchedule() {
     if (!this.newDay || !this.newStart || !this.newEnd) return;
     this.isCreatingSchedule = true;
@@ -172,6 +456,7 @@ export class HomeComponent implements OnInit {
         this.schedules = [...(this.schedules || []), created];
         this.notifications.success('Horario creado');
         this.isCreatingSchedule = false;
+        this.computeDerivedFromData();
       },
       error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo crear el horario'); this.isCreatingSchedule = false; }
     });
@@ -185,6 +470,7 @@ export class HomeComponent implements OnInit {
         this.schedules = (this.schedules || []).map(x => x.id === updated.id ? updated : x);
         this.notifications.success('Horario actualizado');
         this.updatingScheduleId = undefined;
+        this.computeDerivedFromData();
       },
       error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo actualizar el horario'); this.updatingScheduleId = undefined; }
     });
@@ -200,8 +486,195 @@ export class HomeComponent implements OnInit {
         this.schedules = (this.schedules || []).filter(x => x.id !== s.id);
         this.notifications.success('Horario eliminado');
         this.deletingScheduleId = undefined;
+        this.computeDerivedFromData();
       },
       error: (err) => { this.notifications.error(err?.error?.error || 'No se pudo eliminar el horario'); this.deletingScheduleId = undefined; }
     });
   }
+
+  private computeDerivedFromData() {
+    void this.weekDays;
+  }
+
+  ringStyle(pct: number, color: string) { const p = Math.max(0, Math.min(100, Math.round(pct))); return { background: `conic-gradient(${color} ${p}%, rgba(0,0,0,0.08) 0)` }; }
+
+  get weekDays() {
+    const start = this.startOfWeek(new Date());
+    const items: { label: string; date: Date; items: import('../../core/barber.service').Booking[]; available: number; booked: number; occupancyPct: number }[] = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const label = new Intl.DateTimeFormat('es-ES', { weekday: 'short' }).format(day);
+      const bks = (this.bookings || []).filter(b => this.sameDay(new Date(b.startTime), day));
+      const avail = this.availableMinutes(day);
+      const booked = bks.reduce((acc, b) => acc + this.durationMinutes(b), 0);
+      const pct = avail > 0 ? Math.min(100, Math.round((booked / avail) * 100)) : 0;
+      items.push({ label, date: day, items: bks, available: avail, booked, occupancyPct: pct });
+    }
+    this.weeklyOccupancyPct = this.safeAvg(items.map(x => x.occupancyPct));
+    this.occupancyMetrics = items.map(x => ({ day: x.label, pct: x.occupancyPct }));
+    this.peakHoursText = this.computePeakHoursText(items);
+    this.computeFinancials();
+    return items;
+  }
+
+  private computePeakHoursText(items: { items: import('../../core/barber.service').Booking[] }[]): string {
+    const counts: Record<string, number> = {};
+    items.forEach(day => {
+      day.items.forEach(b => {
+        const d = new Date(b.startTime);
+        const h = d.getHours();
+        const key = `${String(h).padStart(2, '0')}:00`;
+        counts[key] = (counts[key] || 0) + 1;
+      });
+    });
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 2);
+    if (!top.length) return '';
+    const ranges = top.map(([hh]) => {
+      const h = parseInt(hh.slice(0,2), 10);
+      const end = (h + 1) % 24;
+      return `${hh}–${String(end).padStart(2,'0')}:00`;
+    });
+    return ranges.join(', ');
+  }
+
+  private computeFinancials() {
+    const now = new Date();
+    const months: string[] = [];
+    const vals: number[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mm = d.getMonth();
+      const yy = d.getFullYear();
+      months.push(new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(d));
+      const v = (this.bookings || [])
+        .filter(b => {
+          const dt = new Date(b.startTime);
+          return dt.getMonth() === mm && dt.getFullYear() === yy && (b.status !== 'CANCELLED');
+        })
+        .reduce((acc, b) => acc + (b.priceCents || 0), 0);
+      vals.push(v);
+    }
+    this.earningsMonths = months;
+    this.earningsValues = vals;
+    const cur = vals[vals.length - 1] || 0;
+    const prev = vals[vals.length - 2] || 1;
+    this.currentVsPrevDelta = Math.round(((cur - prev) / prev) * 100);
+    this.projectedIncome = (this.bookingsUpcoming || [])
+      .filter(b => (b.status !== 'CANCELLED'))
+      .reduce((acc, b) => acc + (b.priceCents || 0), 0);
+    const byService: Record<string, number> = {};
+    (this.bookings || []).forEach(b => {
+      if (b.status === 'CANCELLED') return;
+      const k = b.service || 'Otro';
+      byService[k] = (byService[k] || 0) + (b.priceCents || 0);
+    });
+    const top = Object.entries(byService).sort((a, b) => b[1] - a[1])[0];
+    this.topService = top ? { name: top[0], revenue: top[1] } : undefined;
+    const total = (this.bookings || []).length || 1;
+    const cancelled = (this.bookings || []).filter(b => b.status === 'CANCELLED').length;
+    this.cancelRate = Math.round((cancelled / total) * 100);
+    const byClient: Record<string, { revenue: number; count: number }> = {};
+    (this.bookings || []).forEach(b => {
+      const k = b.clientName || '—';
+      const rev = b.status === 'CANCELLED' ? 0 : (b.priceCents || 0);
+      const prevC = byClient[k]?.count || 0;
+      const prevR = byClient[k]?.revenue || 0;
+      byClient[k] = { revenue: prevR + rev, count: prevC + 1 };
+    });
+    this.topClients = Object.entries(byClient)
+      .map(([name, v]) => ({ name, revenue: v.revenue, count: v.count }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 6);
+    this.computeAssistantTips();
+  }
+
+  private computeAssistantTips() {
+    const tips: string[] = [];
+    tips.push(`Tu agenda está al ${this.weeklyOccupancyPct}% esta semana`);
+    const lowSlots = this.lowOccupancySlots();
+    if (lowSlots) tips.push(`Detectamos baja ocupación ${lowSlots}. Considera promociones en esos horarios`);
+    if (this.topService) tips.push(`Tus servicios de mayor margen: ${this.topService.name}. Promuévelos más`);
+    const delta = this.currentVsPrevDelta;
+    if (delta < 0) tips.push(`Podrías aumentar ingresos ajustando precios de servicios premium`);
+    tips.push('Quienes toman corte A a menudo requieren barba. Ofrece combos');
+    tips.push(`Tu tasa de cancelación es ${this.cancelRate}%. Activa recordatorios o depósitos`);
+    tips.push('Identifica períodos de baja demanda y lanza campañas puntuales');
+    tips.push('Extiende horario en días de alta demanda y prueba nuevos servicios');
+    this.assistantTips = tips;
+    const headline = lowSlots ? 'Baja ocupación detectada. Revisa promociones sugeridas.' : 'Agenda saludable esta semana.';
+    if (headline !== this.assistantHeadlineLast) {
+      this.assistantHeadlineLast = headline;
+    }
+  }
+
+  private lowOccupancySlots(): string {
+    const metrics = this.occupancyMetrics || [];
+    const lows = metrics.filter(x => x.pct < 40).map(x => x.day);
+    return lows.length ? `en ${lows.join(', ')}` : '';
+  }
+
+  private startOfWeek(d: Date): Date {
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.getFullYear(), d.getMonth(), diff);
+  }
+  private startOfMonth(d: Date): Date { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  private endOfMonth(d: Date): Date { return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+
+  private sameDay(a: Date, b: Date): boolean {
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+
+  private availableMinutes(day: Date): number {
+    const dow = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'][day.getDay()];
+    const slots = (this.schedules || []).filter(s => s.dayOfWeek === dow);
+    return slots.reduce((acc, s) => acc + this.hhmmToMinutes(s.startTime, s.endTime), 0);
+  }
+
+  private durationMinutes(b: import('../../core/barber.service').Booking): number {
+    const start = new Date(b.startTime);
+    const end = new Date(b.endTime);
+    return Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000));
+  }
+
+  private hhmmToMinutes(start: string, end: string): number {
+    const [sh, sm] = start.split(':').map(n => parseInt(n, 10));
+    const [eh, em] = end.split(':').map(n => parseInt(n, 10));
+    return ((eh * 60 + em) - (sh * 60 + sm));
+  }
+
+  private safeAvg(nums: number[]): number { const s = nums.reduce((a, b) => a + b, 0); const n = nums.length || 1; return Math.round(s / n); }
+
+  timeShort(iso: string): string { return new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); }
+
+  prevMonth() { this.monthCursor = new Date(this.monthCursor.getFullYear(), this.monthCursor.getMonth() - 1, 1); }
+  nextMonth() { this.monthCursor = new Date(this.monthCursor.getFullYear(), this.monthCursor.getMonth() + 1, 1); }
+  monthName(d: Date): string { return new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(d); }
+  earnBarHeight(cents: number): string {
+    const max = Math.max(...this.earningsValues, 1);
+    const h = Math.round(((cents || 0) / max) * 140) + 20;
+    return h + 'px';
+  }
+  earnBarColor(cents: number): string {
+    const avg = this.safeAvg(this.earningsValues) || 1;
+    if ((cents || 0) > avg * 1.2) return 'bg-indigo-400 rounded';
+    if ((cents || 0) > avg * 1.05) return 'bg-indigo-300 rounded';
+    return 'bg-indigo-200 rounded';
+  }
+  get monthDays() {
+    const start = this.startOfMonth(this.monthCursor);
+    const end = this.endOfMonth(this.monthCursor);
+    const days: { date: Date; items: import('../../core/barber.service').Booking[]; occupancyPct: number }[] = [];
+    for (let i = 1; i <= end.getDate(); i++) {
+      const day = new Date(start.getFullYear(), start.getMonth(), i);
+      const items = (this.bookings || []).filter(b => this.sameDay(new Date(b.startTime), day));
+      const avail = this.availableMinutes(day);
+      const booked = items.reduce((acc, b) => acc + this.durationMinutes(b), 0);
+      const pct = avail > 0 ? Math.min(100, Math.round((booked / avail) * 100)) : 0;
+      days.push({ date: day, items, occupancyPct: pct });
+    }
+    return days;
+  }
+  openDay(d: Date) { this.focusDate = d; this.viewFilter = 'ALL'; }
+  clearFocus() { this.focusDate = undefined; }
 }

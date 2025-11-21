@@ -13,34 +13,7 @@ import { Barber } from '../../core/catalog.service';
   template: `
     <div class="max-w-6xl mx-auto px-4 sm:px-0">
       <div class="flex items-center mb-6">
-        <h2 class="barber-title text-3xl font-bold">Panel de barbero</h2>
-        <span class="ml-auto"></span>
-        <button class="btn btn-muted text-xs" (click)="darkMode = !darkMode">{{ darkMode ? 'Claro' : 'Oscuro' }}</button>
-      </div>
-      <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-purple-500 text-white p-4 mb-6 shadow">
-        <div class="flex items-center gap-3">
-          <div class="text-2xl">💼</div>
-          <div class="font-semibold">Resumen de negocio</div>
-          <span class="ml-auto text-sm">Semana actual</span>
-        </div>
-        <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-          <div class="bg-white/10 rounded px-3 py-2">
-            <div class="text-indigo-200">Ocupación</div>
-            <div class="text-lg font-bold">{{ weeklyOccupancyPct }}%</div>
-          </div>
-          <div class="bg-white/10 rounded px-3 py-2">
-            <div class="text-indigo-200">Proyección</div>
-            <div class="text-lg font-bold">{{ formatCOP(projectedIncome) }}</div>
-          </div>
-          <div class="bg-white/10 rounded px-3 py-2">
-            <div class="text-indigo-200">Delta mensual</div>
-            <div class="text-lg font-bold">{{ currentVsPrevDelta }}%</div>
-          </div>
-          <div class="bg-white/10 rounded px-3 py-2">
-            <div class="text-indigo-200">Cancelaciones</div>
-            <div class="text-lg font-bold">{{ cancelRate }}%</div>
-          </div>
-        </div>
+        <h2 class="barber-title text-3xl font-bold">Editar perfil</h2>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -104,168 +77,12 @@ import { Barber } from '../../core/catalog.service';
           </ng-template>
         </div>
 
-        <div class="lg:col-span-2 border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
-          <h3 class="font-medium mb-2">Mis reservas</h3>
-          <div class="flex flex-wrap items-center gap-2 mb-3">
-            <span class="text-xs text-gray-600">Filtro:</span>
-            <select class="border rounded px-2 py-1 text-sm" [(ngModel)]="viewFilter">
-              <option [ngValue]="'UPCOMING'">Próximas</option>
-              <option [ngValue]="'HISTORY'">Historial</option>
-              <option [ngValue]="'ALL'">Todas</option>
-            </select>
-            <button class="text-xs underline" (click)="refreshBookings()">Actualizar</button>
-          </div>
-          <div *ngIf="bookings; else loadingBk" class="overflow-x-auto -mx-4 sm:mx-0 rounded-xl border shadow-sm" [ngClass]="darkMode ? 'border-neutral-700' : ''">
-            <table class="min-w-full text-sm">
-              <thead>
-                <tr class="text-left">
-                  <th class="py-2 pr-4">Cliente</th>
-                  <th class="py-2 pr-4">Servicio</th>
-                  <th class="py-2 pr-4">Inicio</th>
-                  <th class="py-2 pr-4">Fin</th>
-                  <th class="py-2 pr-4">Estado</th>
-                  <th class="py-2 pr-4">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y">
-                <tr *ngFor="let b of filteredBookings" class="odd:bg-white even:bg-gray-50">
-                  <td class="py-2 pr-4">{{ b.clientName }}</td>
-                  <td class="py-2 pr-4">{{ b.service }}</td>
-                  <td class="py-2 pr-4">{{ formatDate(b.startTime) }}</td>
-                  <td class="py-2 pr-4">{{ formatDate(b.endTime) }}</td>
-                  <td class="py-2 pr-4">{{ b.status || 'CONFIRMED' }}</td>
-                  <td class="py-2 pr-4">
-                    <button *ngIf="canCancel(b)" (click)="cancelBooking(b)" class="text-red-600 underline" [disabled]="actionBookingId === b.id">
-                      <span *ngIf="actionBookingId !== b.id">Cancelar</span>
-                      <span *ngIf="actionBookingId === b.id">Cancelando…</span>
-                    </button>
-                    <button *ngIf="canComplete(b)" (click)="completeBooking(b)" class="ml-3 text-green-700 underline" [disabled]="actionBookingId === b.id">
-                      <span *ngIf="actionBookingId !== b.id">Completar</span>
-                      <span *ngIf="actionBookingId === b.id">Completando…</span>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <ng-template #loadingBk>
-            <div class="text-sm text-gray-500">Cargando reservas…</div>
-          </ng-template>
-        </div>
+        
       </div>
 
       
 
-      <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="border rounded p-4" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white'">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">🗓️</span> Calendario inteligente (semana)</h3>
-            <div class="text-xs text-gray-600">Ocupación semanal: {{ weeklyOccupancyPct }}%</div>
-          </div>
-          <div class="grid grid-cols-7 gap-2 mb-2">
-            <div *ngFor="let d of weekDays" class="text-xs text-gray-700 text-center font-medium bg-gray-50 rounded py-1">{{ d.label }}</div>
-          </div>
-          <div class="grid grid-cols-7 gap-2">
-            <div *ngFor="let d of weekDays" class="border rounded-lg p-2 h-40 overflow-hidden relative bg-white">
-              <div class="absolute inset-0" [ngStyle]="{ background: d.available > 0 ? 'linear-gradient(to top, rgba(16,185,129,0.15) '+ d.occupancyPct +'%, transparent '+ d.occupancyPct +'%)' : 'transparent' }"></div>
-              <div class="absolute inset-x-0 bottom-0 bg-emerald-300/30" [style.height]="d.occupancyPct + '%'" [style.transition]="'height 500ms ease'"></div>
-              <div class="relative z-10">
-                <div class="text-[10px] text-gray-500 mb-1">Ocupación: {{ d.occupancyPct }}%</div>
-                <div class="space-y-1">
-                  <div *ngFor="let b of d.items" class="text-[11px] px-2 py-1 rounded bg-indigo-50 text-indigo-700 truncate">{{ timeShort(b.startTime) }} • {{ b.clientName }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mt-2 text-xs text-gray-600">Huecos disponibles marcados en verde suave.</div>
-        </div>
-        <div class="border rounded p-4 bg-white">
-          <h3 class="barber-subtitle font-semibold mb-2">Ocupación diaria</h3>
-          <div class="space-y-2">
-            <div class="grid grid-cols-7 gap-2 mb-3">
-              <div *ngFor="let m of occupancyMetrics" class="flex flex-col items-center gap-1">
-                <div class="text-[11px] text-gray-600">{{ m.day }}</div>
-                <div class="relative w-16 h-16 rounded-full" [ngStyle]="ringStyle(m.pct, '#10b981')">
-                  <div class="absolute inset-2 rounded-full bg-white"></div>
-                  <div class="absolute inset-0 flex items-center justify-center text-xs font-semibold">{{ m.pct }}%</div>
-                </div>
-              </div>
-            </div>
-            <div *ngFor="let m of occupancyMetrics" class="flex items-center justify-between text-sm">
-              <div>{{ m.day }}</div>
-              <div class="font-medium">{{ m.pct }}%</div>
-            </div>
-            <div class="mt-2 text-xs text-gray-500">Picos: {{ peakHoursText }}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-6">
-        <div class="border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">📆</span> Calendario mensual</h3>
-            <div class="flex items-center gap-2 text-xs text-gray-600">
-              <button class="underline" (click)="prevMonth()">Anterior</button>
-              <div>{{ monthName(monthCursor) }}</div>
-              <button class="underline" (click)="nextMonth()">Siguiente</button>
-            </div>
-          </div>
-          <div class="grid grid-cols-7 gap-2 text-xs text-gray-700 font-medium mb-2">
-            <div *ngFor="let w of ['L','M','X','J','V','S','D']" class="text-center">{{ w }}</div>
-          </div>
-          <div class="grid grid-cols-7 gap-2">
-            <div *ngFor="let d of monthDays" class="border rounded-lg p-2 h-24 relative cursor-pointer bg-white hover:bg-indigo-50/40 transition" (click)="openDay(d.date)">
-              <div class="flex items-center justify-between text-[11px] text-gray-600">
-                <span>{{ d.date.getDate() }}</span>
-                <span>{{ d.occupancyPct }}%</span>
-              </div>
-              <div class="mt-1 text-[11px]" [ngClass]="d.occupancyPct < 40 ? 'text-amber-700' : 'text-green-700'">{{ d.items.length }} cita(s)</div>
-              <div class="absolute inset-x-0 bottom-1 h-1 rounded" [ngClass]="d.occupancyPct < 40 ? 'bg-amber-300' : 'bg-emerald-300'" [style.width]="d.occupancyPct + '%'" [style.transition]="'width 400ms ease'"></div>
-            </div>
-          </div>
-          <div class="mt-2 text-xs text-gray-600">Pulsa un día para ver detalles en la tabla de reservas.
-            <button *ngIf="focusDate" class="ml-2 underline" (click)="clearFocus()">Quitar filtro</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="border rounded-xl p-4 backdrop-blur shadow lg:col-span-2" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">💰</span> Ingresos mensuales</h3>
-            <div class="text-xs text-gray-600">Actual vs anterior: {{ currentVsPrevDelta }}%</div>
-          </div>
-          <div class="h-36 flex items-end gap-1">
-            <div *ngFor="let m of earningsMonths; let i = index" class="flex-1 relative" [style.height]="earnBarHeight(earningsValues[i])" [style.transition]="'height 500ms ease'" [ngClass]="earnBarColor(earningsValues[i])">
-              <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-700">{{ formatCOP(earningsValues[i]) }}</div>
-              <div class="text-[10px] text-gray-600 text-center mt-1">{{ m }}</div>
-            </div>
-          </div>
-          <div class="mt-3 grid grid-cols-3 gap-3 text-sm">
-            <div class="border rounded p-2">
-              <div class="text-gray-600">Proyección</div>
-              <div class="font-bold">{{ formatCOP(projectedIncome) }}</div>
-            </div>
-            <div class="border rounded p-2">
-              <div class="text-gray-600">Servicio destacado</div>
-              <div class="font-bold">{{ topService?.name || '—' }}</div>
-            </div>
-            <div class="border rounded p-2">
-              <div class="text-gray-600">Cancelaciones</div>
-              <div class="font-bold">{{ cancelRate }}%</div>
-            </div>
-          </div>
-        </div>
-        <div class="border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
-          <div class="flex items-center gap-2 mb-2">
-            <div class="text-xl">🧠</div>
-            <h3 class="barber-subtitle font-semibold">Asistente</h3>
-          </div>
-          <ul class="text-sm list-disc pl-5 space-y-1">
-            <li *ngFor="let s of assistantTips">{{ s }}</li>
-          </ul>
-        </div>
-      </div>
+      
     </div>
   `
 })
@@ -306,9 +123,7 @@ export class BarberDashboardComponent implements OnInit {
       next: (me) => { this.me = me; this.meActiveDraft = !!me.active; this.meNameDraft = me.name || ''; this.meSpecialtiesDraft = (me.specialties || []).join(', '); this.meCutTypesDraft = (me.cutTypes || []).join(', '); this.meExperienceDraft = me.experienceYears || 0; this.meBioDraft = me.bio || ''; },
       error: () => { /* si no está vinculado, mostrar vacío */ }
     });
-    this.barber.bookings().subscribe({ next: (bs) => { this.bookings = bs; this.computeViews(); } });
-     this.barber.schedules().subscribe({ next: (ss) => this.schedules = ss });
-   }
+  }
 
   saveActive() {
     if (!this.me) return;

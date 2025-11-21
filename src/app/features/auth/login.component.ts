@@ -109,7 +109,7 @@ export class LoginComponent {
       }, 2000);
 
       const res = await this.auth.login(email, password);
-      if (res.role === 'BARBER') this.router.navigateByUrl('/barbero', { replaceUrl: true });
+      if (res.role === 'BARBER') this.router.navigateByUrl('/home', { replaceUrl: true });
       else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin', { replaceUrl: true });
       else if (res.role === 'USER') this.router.navigateByUrl('/cliente', { replaceUrl: true });
       else this.router.navigateByUrl('/reservas', { replaceUrl: true });
@@ -158,7 +158,7 @@ export class LoginComponent {
       // Intentar login de nuevo sin enviar texto plano (solo hash)
       const res = await this.auth.login(email, pw);
       this.showMigrationDialog = false;
-      if (res.role === 'BARBER') this.router.navigateByUrl('/barbero', { replaceUrl: true });
+      if (res.role === 'BARBER') this.router.navigateByUrl('/home', { replaceUrl: true });
       else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin', { replaceUrl: true });
       else if (res.role === 'USER') this.router.navigateByUrl('/cliente', { replaceUrl: true });
       else this.router.navigateByUrl('/reservas', { replaceUrl: true });
