@@ -111,7 +111,7 @@ export class LoginComponent {
       const res = await this.auth.login(email, password);
       if (res.role === 'BARBER') this.router.navigateByUrl('/home', { replaceUrl: true });
       else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin', { replaceUrl: true });
-      else if (res.role === 'USER') this.router.navigateByUrl('/cliente', { replaceUrl: true });
+      else if (res.role === 'USER') this.router.navigateByUrl('/home', { replaceUrl: true });
       else this.router.navigateByUrl('/reservas', { replaceUrl: true });
     } catch (e: any) {
       // Si las credenciales son inválidas, ofrecer migración inmediata
@@ -160,7 +160,7 @@ export class LoginComponent {
       this.showMigrationDialog = false;
       if (res.role === 'BARBER') this.router.navigateByUrl('/home', { replaceUrl: true });
       else if (res.role === 'ADMIN') this.router.navigateByUrl('/admin', { replaceUrl: true });
-      else if (res.role === 'USER') this.router.navigateByUrl('/cliente', { replaceUrl: true });
+      else if (res.role === 'USER') this.router.navigateByUrl('/home', { replaceUrl: true });
       else this.router.navigateByUrl('/reservas', { replaceUrl: true });
     } catch (e: any) {
       const msg = e?.error?.message || 'No fue posible actualizar la contraseña. Intenta nuevamente o usa “Olvidé mi contraseña”.';

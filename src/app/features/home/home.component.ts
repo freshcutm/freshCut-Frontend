@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CatalogService, Barber, ServiceItem } from '../../core/catalog.service';
+import { BookingService } from '../../core/booking.service';
 import { CurrencyService } from '../../core/currency.service';
 import { realDurationMinutes } from '../../core/duration-realism';
 import { AuthService } from '../../core/auth.service';
@@ -18,7 +19,17 @@ import { ConfirmService } from '../../ui/confirm.service';
     <section class="relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-white"></div>
       <div class="relative max-w-6xl mx-auto py-12 px-4 grid gap-10">
-        <ng-container *ngIf="auth.role() !== 'BARBER'; else barberHome">
+        <ng-container *ngIf="auth.role() === 'BARBER'; else nonBarber">
+          <ng-container *ngTemplateOutlet="barberHome"></ng-container>
+        </ng-container>
+
+        <ng-template #nonBarber>
+          <ng-container *ngIf="auth.role() === 'USER'; else publicHome">
+            <ng-container *ngTemplateOutlet="clientHome"></ng-container>
+          </ng-container>
+        </ng-template>
+
+        <ng-template #publicHome>
           <div class="text-center">
             <h1 class="barber-title text-5xl sm:text-6xl font-extrabold tracking-tight mb-4">Barbería de nueva generación</h1>
             <p class="text-gray-600 mb-8">Reserva en segundos, descubre servicios de calidad y recibe recomendaciones personalizadas.</p>
@@ -26,10 +37,10 @@ import { ConfirmService } from '../../ui/confirm.service';
               <a routerLink="/reservas" class="btn btn-primary w-full sm:w-auto">Reservar ahora</a>
               <a routerLink="/ia" class="btn btn-outline w-full sm:w-auto">Probar asistente IA</a>
               <a routerLink="/auth/register" class="btn btn-outline w-full sm:w-auto">Crear cuenta</a>
-              <a routerLink="/auth/register/barbero" class="btn btn-outline w-full sm:w-auto">Soy barbero</a>
+              <a routerLink="/home" class="btn btn-outline w-full sm:w-auto">Ir a mi panel</a>
             </div>
           </div>
-        </ng-container>
+        </ng-template>
 
         <ng-template #barberHome>
           <div class="text-center">
@@ -287,6 +298,162 @@ import { ConfirmService } from '../../ui/confirm.service';
           </div>
         </ng-template>
 
+        <ng-template #clientHome>
+          <div class="max-w-6xl mx-auto px-4 sm:px-0">
+            <div class="flex items-center mb-2">
+              <h2 class="barber-title text-3xl font-bold">Mi panel</h2>
+            </div>
+            <p class="text-sm text-gray-600 mb-6">Bienvenido, <span class="font-medium">{{ auth.email() }}</span></p>
+
+            <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-purple-500 text-white p-4 mb-6 shadow">
+              <div class="flex items-center gap-3">
+                <div class="text-2xl">✂️</div>
+                <div class="font-semibold">Resumen rápido</div>
+                <span class="ml-auto text-sm">Últimos {{ months.length }} meses</span>
+              </div>
+              <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div class="bg-white/10 rounded px-3 py-2">
+                  <div class="text-indigo-200">Cortes</div>
+                  <div class="text-lg font-bold">{{ totalCuts12m }}</div>
+                </div>
+                <div class="bg-white/10 rounded px-3 py-2">
+                  <div class="text-indigo-200">Gasto total</div>
+                  <div class="text-lg font-bold">{{ formatCOPCents(totalSpend12m) }}</div>
+                </div>
+                <div class="bg-white/10 rounded px-3 py-2">
+                  <div class="text-indigo-200">Promedio mensual</div>
+                  <div class="text-lg font-bold">{{ formatCOPCents(avgMonthlySpend) }}</div>
+                </div>
+                <div class="bg-white/10 rounded px-3 py-2">
+                  <div class="text-indigo-200">Costo promedio</div>
+                  <div class="text-lg font-bold">{{ formatCOPCents(avgCostPerCut) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+              <div class="border rounded-xl p-4 backdrop-blur shadow bg-white/90">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">🟢</span> Cortes vs promedio</h3>
+                  <div class="text-xs text-gray-600">{{ months[months.length-1] }}</div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="relative w-28 h-28 rounded-full" [ngStyle]="ringStyle(cutsPct(), '#22c55e')">
+                    <div class="absolute inset-2 rounded-full bg-white"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-sm font-semibold">{{ cutsPct() }}%</div>
+                  </div>
+                  <div class="text-sm">
+                    <div>Este mes: <span class="font-semibold">{{ monthlyCuts[months.length-1] || 0 }}</span></div>
+                    <div>Promedio: <span class="font-semibold">{{ avgCuts() }}</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="border rounded-xl p-4 backdrop-blur shadow bg-white/90">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">🟣</span> Gasto vs promedio</h3>
+                  <div class="text-xs text-gray-600">{{ months[months.length-1] }}</div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="relative w-28 h-28 rounded-full" [ngStyle]="ringStyle(spendPct(), '#8b5cf6')">
+                    <div class="absolute inset-2 rounded-full bg-white"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-sm font-semibold">{{ spendPct() }}%</div>
+                  </div>
+                  <div class="text-sm">
+                    <div>Este mes: <span class="font-semibold">{{ formatCOPCents(monthlySpend[months.length-1] || 0) }}</span></div>
+                    <div>Promedio: <span class="font-semibold">{{ formatCOPCents(avgMonthlySpend) }}</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 mb-8">
+              <div class="border rounded-xl p-4 backdrop-blur shadow bg-white/90">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">📈</span> Frecuencia de cortes</h3>
+                  <div class="flex items-center gap-3">
+                    <label class="text-xs text-gray-600">Rango</label>
+                    <select class="border rounded px-2 py-1 text-xs" [(ngModel)]="rangeMonths" (ngModelChange)="rebuild()">
+                      <option [ngValue]="6">6</option>
+                      <option [ngValue]="12">12</option>
+                      <option [ngValue]="24">24</option>
+                    </select>
+                    <span class="text-xs text-gray-500">Total: {{ totalCuts12m }}</span>
+                  </div>
+                </div>
+                <div class="h-40 flex items-end gap-1 rounded-lg p-2 bg-[length:100%_16px]" [ngStyle]="{ backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.06) 1px, transparent 1px)' }">
+                  <div *ngFor="let m of months; let i = index"
+                       class="flex-1 relative group"
+                       [style.height]="barHeight(monthlyCuts[i])"
+                       [style.transition]="'height 300ms ease'"
+                       [ngClass]="barColor(monthlyCuts[i])">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-700">{{ monthlyCuts[i] }}</div>
+                    <div class="absolute bottom-0 left-0 right-0 h-1 bg-black/5"></div>
+                    <div class="text-[10px] text-gray-600 text-center mt-1">{{ m }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <div class="border rounded-xl p-4 backdrop-blur shadow bg-white/90">
+                <h3 class="barber-subtitle font-semibold mb-2">Gasto acumulado</h3>
+                <div class="flex items-baseline gap-3">
+                  <div class="text-2xl font-bold" [ngClass]="expenseStatusClass">{{ formatCOPCents(totalSpend12m) }}</div>
+                  <div class="text-xs text-gray-500">Promedio por corte: {{ formatCOPCents(avgCostPerCut) }}</div>
+                </div>
+                <div class="mt-2 text-xs text-gray-600">Promedio mensual: {{ formatCOPCents(avgMonthlySpend) }}</div>
+              </div>
+              <div class="border rounded-xl p-4 backdrop-blur lg:col-span-2 shadow bg-white/90">
+                <h3 class="barber-subtitle font-semibold mb-2">Gasto mensual (12 meses)</h3>
+                <div class="h-40 flex items-end gap-1 rounded-lg p-2 bg-[length:100%_16px]" [ngStyle]="{ backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.06) 1px, transparent 1px)' }">
+                  <div *ngFor="let m of months; let i = index"
+                       class="flex-1 relative group"
+                       [style.height]="barHeightSpend(monthlySpend[i])"
+                       [style.transition]="'height 300ms ease'"
+                       [ngClass]="spendBarColor(monthlySpend[i])">
+                    <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-700">{{ formatCOPCents(monthlySpend[i]) }}</div>
+                    <div class="text-[10px] text-gray-600 text-center mt-1">{{ m }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <div class="border rounded-xl p-4 backdrop-blur shadow lg:col-span-2 bg-white/90">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="barber-subtitle font-semibold">Historial de servicios</h3>
+                  <a routerLink="/reservas" class="text-xs text-indigo-600 hover:underline">Ver todas</a>
+                </div>
+                <div class="divide-y">
+                  <div *ngFor="let b of recentBookings" class="py-3 flex items-center justify-between">
+                    <div>
+                      <div class="font-medium">{{ b.service }}</div>
+                      <div class="text-xs text-gray-500">{{ b.startTime | date:'mediumDate' }} • {{ b.barber }}</div>
+                    </div>
+                    <div class="text-sm font-semibold">{{ formatCOPCents(b.priceCents || 0) }}</div>
+                  </div>
+                  <div *ngIf="!recentBookings.length" class="py-3 text-sm text-gray-500">Aún no tienes servicios registrados.</div>
+                </div>
+              </div>
+              <div class="border rounded-xl p-0 backdrop-blur shadow overflow-hidden bg-white/90">
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-500 text-white px-4 py-3 flex items-center gap-2">
+                  <div class="text-xl">💡</div>
+                  <h3 class="barber-subtitle font-semibold">Análisis inteligente</h3>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-[10px] uppercase tracking-wide text-gray-500">Estado</span>
+                  </div>
+                  <div class="text-sm mb-2" [ngClass]="alertClass">{{ alertMessage }}</div>
+                  <ul class="text-sm list-disc pl-5 space-y-1">
+                    <li *ngFor="let r of recommendations">{{ r }}</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
         <div class="grid md:grid-cols-2 gap-8">
           <div class="md:col-span-2">
             <div class="flex items-center justify-between">
@@ -307,11 +474,7 @@ import { ConfirmService } from '../../ui/confirm.service';
             </ng-template>
           </div>
         </div>
-        <div *ngIf="auth.role() !== 'BARBER'" class="mt-2 bg-indigo-50 border border-indigo-100 rounded p-6 text-center">
-          <h3 class="text-xl font-semibold mb-2">¿Eres barbero?</h3>
-          <p class="text-gray-700 mb-4">Únete a FreshCut para gestionar tus reservas, crear tu perfil y atraer más clientes.</p>
-          <a routerLink="/auth/register/barbero" class="inline-block bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700">Crear perfil de barbero</a>
-        </div>
+        
       </div>
     </section>
   `
@@ -349,7 +512,7 @@ export class HomeComponent implements OnInit {
   assistantTips: string[] = [];
   private assistantHeadlineLast?: string;
 
-  constructor(private catalog: CatalogService, private currency: CurrencyService, public auth: AuthService, private barber: BarberService, private notifications: NotificationsService, private confirm: ConfirmService) {}
+  constructor(private catalog: CatalogService, private currency: CurrencyService, public auth: AuthService, private barber: BarberService, private notifications: NotificationsService, private confirm: ConfirmService, private bookingSvc: BookingService) {}
 
   ngOnInit(): void {
     this.currency.warmup();
@@ -358,6 +521,12 @@ export class HomeComponent implements OnInit {
     if (this.auth.role() === 'BARBER') {
       this.barber.schedules().subscribe({ next: (ss) => { this.schedules = ss; this.computeDerivedFromData(); } });
       this.barber.bookings().subscribe({ next: (bs) => { this.bookings = bs; this.computeViews(); this.computeDerivedFromData(); } });
+    }
+    if (this.auth.role() === 'USER') {
+      this.bookingSvc.my().subscribe({
+        next: (data: import('../../core/booking.service').Booking[]) => { this.myBookings = data || []; this.computeAnalytics(); },
+        error: () => { this.myBookings = []; this.computeAnalytics(); }
+      });
     }
   }
 
@@ -661,6 +830,82 @@ export class HomeComponent implements OnInit {
     if ((cents || 0) > avg * 1.05) return 'bg-indigo-300 rounded';
     return 'bg-indigo-200 rounded';
   }
+
+  // CLIENT: estado y analítica
+  myBookings: import('../../core/booking.service').Booking[] = [];
+  months: string[] = [];
+  monthlyCuts: number[] = [];
+  monthlySpend: number[] = [];
+  rangeMonths = 12;
+  totalCuts12m = 0;
+  totalSpend12m = 0;
+  avgMonthlySpend = 0;
+  avgCostPerCut = 0;
+  recentBookings: import('../../core/booking.service').Booking[] = [];
+  alertMessage = '';
+  recommendations: string[] = [];
+  expenseStatusClass = '';
+  alertClass = '';
+  darkMode = false;
+  cutsPct(): number { const idx = this.months.length - 1; const cur = this.monthlyCuts[idx] || 0; const avg = Math.max(1, Math.round(this.totalCuts12m / 12)); return Math.min(100, Math.round((cur / avg) * 100)); }
+  spendPct(): number { const idx = this.months.length - 1; const cur = this.monthlySpend[idx] || 0; const avg = Math.max(1, this.avgMonthlySpend || 1); return Math.min(100, Math.round((cur / avg) * 100)); }
+  avgCuts(): number { return Math.round(this.totalCuts12m / 12); }
+  rebuild() { this.computeAnalytics(); }
+  private computeAnalytics() {
+    const now = new Date();
+    const monthsLabels: string[] = [];
+    const cuts: number[] = [];
+    const spend: number[] = [];
+    const total = this.rangeMonths;
+    for (let i = total - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      monthsLabels.push(this.monthShort(d));
+      const mm = d.getMonth();
+      const yy = d.getFullYear();
+      const bucket = (this.myBookings || []).filter(b => { const dt = new Date(b.startTime); return dt.getMonth() === mm && dt.getFullYear() === yy && (b.status !== 'CANCELLED'); });
+      cuts.push(bucket.length);
+      const s = bucket.reduce((acc, b) => acc + (b.priceCents || 0), 0);
+      spend.push(s);
+    }
+    this.months = monthsLabels;
+    this.monthlyCuts = cuts;
+    this.monthlySpend = spend;
+    this.totalCuts12m = cuts.reduce((a, b) => a + b, 0);
+    const totalCents = spend.reduce((a, b) => a + b, 0);
+    this.totalSpend12m = totalCents;
+    this.avgMonthlySpend = Math.round(totalCents / 12);
+    this.avgCostPerCut = this.totalCuts12m > 0 ? Math.round(totalCents / this.totalCuts12m) : 0;
+    this.recentBookings = [...(this.myBookings || [])]
+      .filter(b => b.status !== 'CANCELLED')
+      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+      .slice(0, 8);
+    this.computeAi();
+  }
+  private computeAi() {
+    const currentMonthIndex = this.months.length - 1;
+    const cutsThisMonth = this.monthlyCuts[currentMonthIndex] || 0;
+    const spendThisMonth = this.monthlySpend[currentMonthIndex] || 0;
+    const avgCuts = Math.round(this.totalCuts12m / 12);
+    const avgSpend = this.avgMonthlySpend;
+    const highCuts = cutsThisMonth >= 4;
+    const highSpend = spendThisMonth > Math.round(avgSpend * 1.2);
+    const moderateSpend = spendThisMonth > Math.round(avgSpend * 1.05);
+    if (highCuts || highSpend) { this.alertMessage = `Hey, detectamos un gasto de ${this.formatCOPCents(spendThisMonth)} este mes y ${cutsThisMonth} corte(s). Tenemos recomendaciones para optimizar.`; this.alertClass = 'text-red-700 bg-red-50 border border-red-100 rounded p-2'; this.notifications.warning('Agenda y gasto altos este mes. Revisa recomendaciones.'); }
+    else if (moderateSpend) { this.alertMessage = `Tu gasto este mes es ${this.formatCOPCents(spendThisMonth)}. Aquí van algunas sugerencias para equilibrarlo.`; this.alertClass = 'text-yellow-700 bg-yellow-50 border border-yellow-100 rounded p-2'; this.notifications.info('Ligero aumento de gasto. Te dejamos sugerencias.'); }
+    else { this.alertMessage = `Buen control: ${this.formatCOPCents(spendThisMonth)} este mes y ${cutsThisMonth} corte(s).`; this.alertClass = 'text-green-700 bg-green-50 border border-green-100 rounded p-2'; this.notifications.success('Buen control de gasto este mes.'); }
+    const recs: string[] = [];
+    if (cutsThisMonth >= 3) recs.push('Considera paquetes o membresías si realizas varios cortes al mes');
+    if (this.avgCostPerCut > Math.round(avgSpend / Math.max(avgCuts, 1))) recs.push('Explora servicios más económicos sin perder calidad');
+    recs.push('Espacia los cortes: cabello liso 4–6 semanas, ondulado 3–5, rizado 2–4');
+    recs.push('Activa descuentos por referidos o acumula puntos de lealtad');
+    this.recommendations = recs;
+    this.expenseStatusClass = highSpend ? 'text-red-700' : moderateSpend ? 'text-yellow-700' : 'text-green-700';
+  }
+  private monthShort(d: Date): string { return new Intl.DateTimeFormat('es-ES', { month: 'short' }).format(d); }
+  barHeight(n: number): string { const max = Math.max(...this.monthlyCuts, 1); const h = Math.round((n / max) * 140) + 20; return h + 'px'; }
+  barColor(n: number): string { if (n >= 4) return 'bg-red-300 hover:bg-red-400 transition-all rounded'; if (n >= 3) return 'bg-yellow-300 hover:bg-yellow-400 transition-all rounded'; return 'bg-green-300 hover:bg-green-400 transition-all rounded'; }
+  barHeightSpend(cents: number): string { const max = Math.max(...this.monthlySpend, 1); const h = Math.round(((cents || 0) / max) * 140) + 20; return h + 'px'; }
+  spendBarColor(cents: number): string { const avg = this.avgMonthlySpend || 1; if ((cents || 0) > avg * 1.2) return 'bg-red-300 hover:bg-red-400 transition-all rounded'; if ((cents || 0) > avg * 1.05) return 'bg-yellow-300 hover:bg-yellow-400 transition-all rounded'; return 'bg-green-300 hover:bg-green-400 transition-all rounded'; }
   get monthDays() {
     const start = this.startOfMonth(this.monthCursor);
     const end = this.endOfMonth(this.monthCursor);

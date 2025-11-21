@@ -44,7 +44,6 @@
     </ng-template>
     <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Admin</a>
     <a *ngIf="auth.role() === 'BARBER'" routerLink="/barbero" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Barbero</a>
-    <a *ngIf="auth.role() === 'USER'" routerLink="/cliente" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Panel</a>
     <a *ngIf="auth.isLoggedIn()" routerLink="/perfil" routerLinkActive="text-indigo-300" class="px-2 py-1 rounded hover:text-indigo-300">Perfil</a>
   </div>
 </header>

@@ -103,11 +103,11 @@ export class NavigationControlService {
       return;
     }
     if (r === 'BARBER') {
-      this.router.navigateByUrl('/barbero', { replaceUrl: true });
+      this.router.navigateByUrl('/home', { replaceUrl: true });
       return;
     }
     if (r === 'USER') {
-      this.router.navigateByUrl('/cliente', { replaceUrl: true });
+      this.router.navigateByUrl('/home', { replaceUrl: true });
       return;
     }
     this.router.navigateByUrl('/home', { replaceUrl: true });
