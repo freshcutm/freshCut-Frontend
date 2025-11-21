@@ -12,14 +12,14 @@ import { NotificationsService } from '../../ui/notifications.service';
   template: `
     <div class="max-w-md mx-auto p-8 bg-white shadow-sm border rounded-lg">
       <h2 class="text-2xl font-semibold mb-2">Recuperar contraseña</h2>
-      <p class="text-sm text-gray-600 mb-6">Primero verificaremos si tu gmail tiene cuenta.</p>
+      <p class="text-sm text-gray-600 mb-6">Primero verificaremos si tu email tiene cuenta.</p>
       <form (ngSubmit)="submit()" class="space-y-5" *ngIf="state === 'idle'">
         <div>
           <label class="block text-sm font-medium mb-1">Email</label>
           <input [(ngModel)]="email" name="email" type="email" [disabled]="verifying" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100" required />
         </div>
         <button class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700" type="submit" [disabled]="verifying">
-          {{ verifying ? 'Verificando...' : 'Verificar gmail' }}
+          {{ verifying ? 'Verificando...' : 'Verificar email' }}
         </button>
       </form>
       <div class="text-sm text-gray-600 mt-4">
@@ -28,7 +28,7 @@ import { NotificationsService } from '../../ui/notifications.service';
         <a routerLink="/auth/reset" class="text-indigo-600 hover:underline">Ya tengo el código</a>
       </div>
       <div *ngIf="state === 'missing'" class="mt-4 text-sm bg-yellow-50 text-yellow-800 border border-yellow-200 rounded p-3">
-        <div class="mb-3">gmail no encontrado por favor crear cuenta con el gmail o reescribe el gmail</div>
+        <div class="mb-3">Email no registrado, por favor crea una cuenta con este email</div>
         <div class="flex flex-wrap gap-2">
           <button type="button" (click)="goRegister()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Crear cuenta</button>
           <button type="button" (click)="rewriteEmail()" class="border px-4 py-2 rounded">Reescribir email</button>
@@ -54,7 +54,7 @@ export class ForgotPasswordComponent {
     this.verifying = false;
     if (!exists) {
       this.state = 'missing';
-      this.notifications.error('gmail no encontrado por favor crear cuenta con el gmail o reescribe el gmail');
+      this.notifications.error('Email no registrado, por favor crea una cuenta con este email');
       return;
     }
     this.state = 'exists';
