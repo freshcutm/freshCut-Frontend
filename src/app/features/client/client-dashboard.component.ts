@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { BookingService, Booking } from '../../core/booking.service';
@@ -9,7 +10,7 @@ import { NotificationsService } from '../../ui/notifications.service';
 @Component({
   selector: 'app-client-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   template: `
     <div class="max-w-6xl mx-auto px-4 sm:px-0">
       <h2 class="barber-title text-3xl font-bold mb-2">Mi panel</h2>
