@@ -468,6 +468,7 @@ export class BarberDashboardComponent implements OnInit {
   currentVsPrevDelta = 0;
   topClients: { name: string; revenue: number; count: number }[] = [];
   assistantTips: string[] = [];
+  private assistantHeadlineLast?: string;
 
   get weekDays() {
     const start = this.startOfWeek(new Date());
@@ -573,7 +574,10 @@ export class BarberDashboardComponent implements OnInit {
     tips.push('Extiende horario en días de alta demanda y prueba nuevos servicios');
     this.assistantTips = tips;
     const headline = lowSlots ? 'Baja ocupación detectada. Revisa promociones sugeridas.' : 'Agenda saludable esta semana.';
-    if (lowSlots) this.notifications.info(headline); else this.notifications.success(headline);
+    if (headline !== this.assistantHeadlineLast) {
+      if (lowSlots) this.notifications.info(headline); else this.notifications.success(headline);
+      this.assistantHeadlineLast = headline;
+    }
   }
 
   private lowOccupancySlots(): string {
