@@ -209,6 +209,7 @@ import { Barber } from '../../core/catalog.service';
           <div class="grid grid-cols-7 gap-2">
             <div *ngFor="let d of weekDays" class="border rounded-lg p-2 h-40 overflow-hidden relative bg-white">
               <div class="absolute inset-0" [ngStyle]="{ background: d.available > 0 ? 'linear-gradient(to top, rgba(16,185,129,0.15) '+ d.occupancyPct +'%, transparent '+ d.occupancyPct +'%)' : 'transparent' }"></div>
+              <div class="absolute inset-x-0 bottom-0 bg-emerald-300/30" [style.height]="d.occupancyPct + '%'" [style.transition]="'height 500ms ease'"></div>
               <div class="relative z-10">
                 <div class="text-[10px] text-gray-500 mb-1">Ocupación: {{ d.occupancyPct }}%</div>
                 <div class="space-y-1">
@@ -222,6 +223,15 @@ import { Barber } from '../../core/catalog.service';
         <div class="border rounded p-4 bg-white">
           <h3 class="barber-subtitle font-semibold mb-2">Ocupación diaria</h3>
           <div class="space-y-2">
+            <div class="grid grid-cols-7 gap-2 mb-3">
+              <div *ngFor="let m of occupancyMetrics" class="flex flex-col items-center gap-1">
+                <div class="text-[11px] text-gray-600">{{ m.day }}</div>
+                <div class="relative w-16 h-16 rounded-full" [ngStyle]="ringStyle(m.pct, '#10b981')">
+                  <div class="absolute inset-2 rounded-full bg-white"></div>
+                  <div class="absolute inset-0 flex items-center justify-center text-xs font-semibold">{{ m.pct }}%</div>
+                </div>
+              </div>
+            </div>
             <div *ngFor="let m of occupancyMetrics" class="flex items-center justify-between text-sm">
               <div>{{ m.day }}</div>
               <div class="font-medium">{{ m.pct }}%</div>
@@ -251,7 +261,7 @@ import { Barber } from '../../core/catalog.service';
                 <span>{{ d.occupancyPct }}%</span>
               </div>
               <div class="mt-1 text-[11px]" [ngClass]="d.occupancyPct < 40 ? 'text-amber-700' : 'text-green-700'">{{ d.items.length }} cita(s)</div>
-              <div class="absolute inset-x-0 bottom-1 h-1 rounded" [ngClass]="d.occupancyPct < 40 ? 'bg-amber-300' : 'bg-emerald-300'" [style.width]="d.occupancyPct + '%'"></div>
+              <div class="absolute inset-x-0 bottom-1 h-1 rounded" [ngClass]="d.occupancyPct < 40 ? 'bg-amber-300' : 'bg-emerald-300'" [style.width]="d.occupancyPct + '%'" [style.transition]="'width 400ms ease'"></div>
             </div>
           </div>
           <div class="mt-2 text-xs text-gray-600">Pulsa un día para ver detalles en la tabla de reservas.
@@ -267,7 +277,7 @@ import { Barber } from '../../core/catalog.service';
             <div class="text-xs text-gray-600">Actual vs anterior: {{ currentVsPrevDelta }}%</div>
           </div>
           <div class="h-36 flex items-end gap-1">
-            <div *ngFor="let m of earningsMonths; let i = index" class="flex-1 relative" [style.height]="earnBarHeight(earningsValues[i])" [ngClass]="earnBarColor(earningsValues[i])">
+            <div *ngFor="let m of earningsMonths; let i = index" class="flex-1 relative" [style.height]="earnBarHeight(earningsValues[i])" [style.transition]="'height 500ms ease'" [ngClass]="earnBarColor(earningsValues[i])">
               <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-gray-700">{{ formatCOP(earningsValues[i]) }}</div>
               <div class="text-[10px] text-gray-600 text-center mt-1">{{ m }}</div>
             </div>
@@ -499,6 +509,7 @@ export class BarberDashboardComponent implements OnInit {
   assistantTips: string[] = [];
   private assistantHeadlineLast?: string;
   darkMode = false;
+  ringStyle(pct: number, color: string) { const p = Math.max(0, Math.min(100, Math.round(pct))); return { background: `conic-gradient(${color} ${p}%, rgba(0,0,0,0.08) 0)` }; }
 
   get weekDays() {
     const start = this.startOfWeek(new Date());

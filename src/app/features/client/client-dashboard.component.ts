@@ -46,6 +46,41 @@ import { NotificationsService } from '../../ui/notifications.service';
         </div>
       </div>
 
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <div class="border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">🟢</span> Cortes vs promedio</h3>
+            <div class="text-xs text-gray-600">{{ months[months.length-1] }}</div>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="relative w-28 h-28 rounded-full" [ngStyle]="ringStyle(cutsPct(), '#22c55e')">
+              <div class="absolute inset-2 rounded-full" [ngClass]="darkMode ? 'bg-neutral-900' : 'bg-white'"></div>
+              <div class="absolute inset-0 flex items-center justify-center text-sm font-semibold">{{ cutsPct() }}%</div>
+            </div>
+            <div class="text-sm">
+              <div>Este mes: <span class="font-semibold">{{ monthlyCuts[months.length-1] || 0 }}</span></div>
+              <div>Promedio: <span class="font-semibold">{{ avgCuts() }}</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="border rounded-xl p-4 backdrop-blur shadow" [ngClass]="darkMode ? 'bg-neutral-900 text-white border-neutral-700' : 'bg-white/90'">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="barber-subtitle font-semibold flex items-center gap-2"><span class="text-xl">🟣</span> Gasto vs promedio</h3>
+            <div class="text-xs text-gray-600">{{ months[months.length-1] }}</div>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="relative w-28 h-28 rounded-full" [ngStyle]="ringStyle(spendPct(), '#8b5cf6')">
+              <div class="absolute inset-2 rounded-full" [ngClass]="darkMode ? 'bg-neutral-900' : 'bg-white'"></div>
+              <div class="absolute inset-0 flex items-center justify-center text-sm font-semibold">{{ spendPct() }}%</div>
+            </div>
+            <div class="text-sm">
+              <div>Este mes: <span class="font-semibold">{{ formatCOP(monthlySpend[months.length-1] || 0) }}</span></div>
+              <div>Promedio: <span class="font-semibold">{{ formatCOP(avgMonthlySpend) }}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         <div class="border rounded p-4 bg-white lg:col-span-1">
           <h3 class="barber-subtitle font-semibold mb-2">Accesos rápidos</h3>
@@ -162,6 +197,24 @@ export class ClientDashboardComponent implements OnInit {
   expenseStatusClass = '';
   alertClass = '';
   darkMode = false;
+
+  ringStyle(pct: number, color: string) {
+    const p = Math.max(0, Math.min(100, Math.round(pct)));
+    return { background: `conic-gradient(${color} ${p}%, rgba(0,0,0,0.08) 0)` };
+  }
+  cutsPct(): number {
+    const idx = this.months.length - 1;
+    const cur = this.monthlyCuts[idx] || 0;
+    const avg = Math.max(1, Math.round(this.totalCuts12m / 12));
+    return Math.min(100, Math.round((cur / avg) * 100));
+  }
+  spendPct(): number {
+    const idx = this.months.length - 1;
+    const cur = this.monthlySpend[idx] || 0;
+    const avg = Math.max(1, this.avgMonthlySpend || 1);
+    return Math.min(100, Math.round((cur / avg) * 100));
+  }
+  avgCuts(): number { return Math.round(this.totalCuts12m / 12); }
 
   ngOnInit(): void {
     this.currency.warmup();
