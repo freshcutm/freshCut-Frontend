@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { NotificationsService } from '../../ui/notifications.service';
 
@@ -12,9 +12,9 @@ import { NotificationsService } from '../../ui/notifications.service';
   template: `
     <div class="max-w-md mx-auto p-8 bg-white shadow-sm border rounded-lg">
       <h2 class="text-2xl font-semibold mb-2">Cambiar contraseña</h2>
-      <p class="text-sm text-gray-600 mb-6">Introduce tu email y tu nueva contraseña. No necesitas código.</p>
+      <p class="text-sm text-gray-600 mb-6">Cambia tu contraseña. Si vienes de "Olvidé mi contraseña", tu email ya está verificado.</p>
       <form (ngSubmit)="submit()" class="space-y-5">
-        <div>
+        <div *ngIf="!prefilled">
           <label class="block text-sm font-medium mb-1">Email</label>
           <input [(ngModel)]="email" name="email" type="email" [disabled]="submitting" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100" required />
         </div>
@@ -77,7 +77,13 @@ export class ResetPasswordComponent {
   showConfirm = false;
   done = false;
   submitting = false;
-  constructor(private auth: AuthService, private router: Router, private notifications: NotificationsService) {}
+  prefilled = false;
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute, private notifications: NotificationsService) {
+    try {
+      const e = (this.route.snapshot.queryParamMap.get('email') || '').trim();
+      if (e) { this.email = e; this.prefilled = true; }
+    } catch {}
+  }
   togglePassword() { this.showPassword = !this.showPassword; }
   toggleConfirm() { this.showConfirm = !this.showConfirm; }
   async submit() {

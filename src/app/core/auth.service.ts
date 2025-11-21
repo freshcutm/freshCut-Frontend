@@ -83,6 +83,17 @@ export class AuthService {
     return true;
   }
 
+  async checkEmailExists(email: string): Promise<boolean> {
+    const e = (email || '').trim().toLowerCase();
+    if (!e) return false;
+    try {
+      const res = await firstValueFrom(this.http.get<{ exists: boolean }>(`${this.baseUrl}/exists`, { params: { email: e }, withCredentials: true }));
+      return !!res?.exists;
+    } catch {
+      return false;
+    }
+  }
+
   async resetPassword(email: string, code: string, newPassword: string) {
     await firstValueFrom(this.http.post(`${this.baseUrl}/reset`, { email: (email || '').trim().toLowerCase(), code: (code || '').trim(), newPassword }, { withCredentials: true }));
     return true;
